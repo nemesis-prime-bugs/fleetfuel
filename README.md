@@ -13,7 +13,9 @@ Fuel and trip logging for private drivers and small fleets.
   - **Phase 0:** store locally on the server (no cloud storage yet)
 
 ## 0€ / month constraint
-We will use free tiers (e.g., Vercel) where possible and keep recurring costs at 0€ until revenue.
+We will keep recurring costs at **0€** until revenue.
+
+MVP is **local-first** (runs on the laptop) so receipt photos can be stored on local disk. Later we can move receipts to object storage and deploy on a free tier (e.g., Vercel).
 
 ## Key docs (don’t skip these)
 - **Projekt Antrag / Auftrag:** `docs/PROJEKT_ANTRAG.md`
