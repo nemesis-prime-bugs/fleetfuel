@@ -15,6 +15,13 @@ Fuel and trip logging for private drivers and small fleets.
 ## 0€ / month constraint
 We will use free tiers (e.g., Vercel) where possible and keep recurring costs at 0€ until revenue.
 
+## Key docs (don’t skip these)
+- **Projekt Antrag / Auftrag:** `docs/PROJEKT_ANTRAG.md`
+- Product brief: `docs/PRODUCT_BRIEF.md`
+- ADRs: `docs/adr/`
+- Security log: `SECURITY_LOG.md`
+- Tasks/backlog: `TASKS.md`
+
 ## Repo map (planned)
 - `apps/web` — Next.js (UI + API)
 - `packages/db` — schema/migrations

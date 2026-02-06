@@ -24,3 +24,8 @@ Track fuel, trips, and costs for personal vehicles or small fleets—plus receip
 ## Constraints
 - 0€ monthly recurring cost (free tiers OK)
 - Receipt photos stored locally for now
+
+## Canonical project order
+- `docs/PROJEKT_ANTRAG.md` (Projekt Antrag / Auftrag)
+- `docs/PRODUCT_BRIEF.md` (this doc)
+- `docs/adr/*` (architecture decisions)
