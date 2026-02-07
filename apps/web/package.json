@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test:password": "tsx scripts/password-selftest.ts"
+    "test:password": "tsx scripts/password-selftest.ts",
+    "test:sessiontoken": "tsx scripts/sessiontoken-selftest.ts"
   },
   "dependencies": {
     "@prisma/client": "7.3.0",
