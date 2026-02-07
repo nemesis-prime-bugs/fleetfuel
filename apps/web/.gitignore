@@ -38,5 +38,3 @@ next-env.d.ts
 
 # local sqlite db
 *.db
-
-/src/generated/prisma
