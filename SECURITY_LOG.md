@@ -24,6 +24,16 @@ Format:
   - `cd apps/web`
   - `corepack pnpm add prisma@7.3.0 @prisma/client@7.3.0`
   - `corepack pnpm dlx prisma init --datasource-provider sqlite`
+
+### 2026-02-07 (UTC) — Add argon2 for password hashing (native addon)
+- Operator/machine: nemesis-prime@NemesisPrimeBot
+- Intent: password hashing for email+password auth.
+- Registry: https://registry.npmjs.org/
+- Command:
+  - `cd apps/web`
+  - `corepack pnpm add argon2@0.44.0`
+- Notes:
+  - Native addon; install ran `node-gyp-build` (expected for argon2).
 - Notes: Prisma install ran lifecycle scripts (`@prisma/engines` postinstall, `prisma` preinstall) as expected.
 - Outcome:
   - Prisma initialized (`prisma/`, `prisma.config.ts`, `.env`).
