@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test:password": "tsx scripts/password-selftest.ts"
   },
   "dependencies": {
     "@prisma/client": "7.3.0",
@@ -22,6 +23,7 @@
     "@types/react-dom": "^18",
     "eslint": "^9.39.2",
     "eslint-config-next": "16.1.6",
+    "tsx": "4.21.0",
     "typescript": "^5"
   }
 }

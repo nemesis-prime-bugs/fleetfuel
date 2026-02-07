@@ -34,6 +34,14 @@ Format:
   - `corepack pnpm add argon2@0.44.0`
 - Notes:
   - Native addon; install ran `node-gyp-build` (expected for argon2).
+
+### 2026-02-07 (UTC) — Add tsx for TypeScript script execution (test harness)
+- Intent: run a minimal password hash/verify self-test without adding a heavy test framework yet.
+- Registry: https://registry.npmjs.org/
+- Command:
+  - `cd apps/web`
+  - `corepack pnpm add -D tsx@4.21.0`
+- Notes: install ran `esbuild` postinstall (expected dependency of tsx).
 - Notes: Prisma install ran lifecycle scripts (`@prisma/engines` postinstall, `prisma` preinstall) as expected.
 - Outcome:
   - Prisma initialized (`prisma/`, `prisma.config.ts`, `.env`).
