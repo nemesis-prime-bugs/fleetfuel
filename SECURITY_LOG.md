@@ -12,6 +12,24 @@ Format:
 
 ## Entries
 
+### 2026-02-07 (UTC) — Add Prisma (DB ORM) for local SQLite persistence
+- Operator/machine: nemesis-prime@NemesisPrimeBot
+- Repo: FleetFuel (`projects/fleetfuel`)
+- Intent: add DB persistence for auth + MVP entities (local-first).
+- Toolchain:
+  - node v22.22.0
+  - pnpm 9.15.4 (corepack)
+  - registry: https://registry.npmjs.org/
+- Commands:
+  - `cd apps/web`
+  - `corepack pnpm add prisma@7.3.0 @prisma/client@7.3.0`
+  - `corepack pnpm dlx prisma init --datasource-provider sqlite`
+- Notes: Prisma install ran lifecycle scripts (`@prisma/engines` postinstall, `prisma` preinstall) as expected.
+- Outcome:
+  - Prisma initialized (`prisma/`, `prisma.config.ts`, `.env`).
+  - Initial migration applied to local SQLite (`dev.db`) using `prisma migrate dev --name init`.
+  - `.env` and `*.db` are gitignored.
+
 ### 2026-02-06 (UTC) — Scaffold Next.js app (dependency install)
 - Operator/machine: nemesis-prime@NemesisPrimeBot
 - Repo: FleetFuel (`projects/fleetfuel`)

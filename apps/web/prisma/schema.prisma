@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum AccountType {
+  PERSONAL
+  COMPANY
+}
+
+enum FuelType {
+  GASOLINE
+  DIESEL
+  ELECTRIC
+  HYBRID
+  OTHER
+}
+
+enum UnitSystem {
+  METRIC
+  IMPERIAL
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  emailNorm    String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  account      Account?
+  vehicles     Vehicle[]
+  sessions     Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+}
+
+model Account {
+  id        String      @id @default(cuid())
+  type      AccountType
+  name      String?
+  userId    String      @unique
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Vehicle {
+  id         String     @id @default(cuid())
+  userId     String
+  name       String
+  fuelType   FuelType
+  unitSystem UnitSystem @default(METRIC)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fillUps FillUp[]
+  trips   Trip[]
+
+  @@index([userId])
+}
+
+model FillUp {
+  id          String    @id @default(cuid())
+  vehicleId   String
+  occurredAt  DateTime
+  odometer    Int
+  fuelAmount  Float
+  totalCost   Int       // cents
+  currency    String    @default("EUR")
+  isFullTank  Boolean   @default(true)
+  stationName String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  vehicle   Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  receipts  Receipt[]
+
+  @@index([vehicleId, occurredAt])
+}
+
+model Trip {
+  id         String   @id @default(cuid())
+  vehicleId  String
+  occurredAt DateTime
+  distance   Float
+  driverNote String?
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  @@index([vehicleId, occurredAt])
+}
+
+model Receipt {
+  id          String   @id @default(cuid())
+  fillUpId    String
+  storageKey  String
+  contentType String
+  sha256      String?
+  createdAt   DateTime @default(now())
+
+  fillUp FillUp @relation(fields: [fillUpId], references: [id], onDelete: Cascade)
+  @@index([fillUpId])
+}
