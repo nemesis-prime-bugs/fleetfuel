@@ -5,7 +5,8 @@ import { verifyPassword } from "@/lib/auth/password";
 import { normalizeEmail } from "@/lib/auth/signupValidation";
 import { createSession } from "@/lib/auth/sessionRepo";
 import { setSessionCookie } from "@/lib/auth/sessionCookie";
-import { getClientIp, rateLimitOrThrow } from "@/lib/auth/rateLimit";
+import { getClientIp } from "@/lib/auth/rateLimit";
+import { rateLimitOrThrowDurable, RateLimitError } from "@/lib/auth/rateLimitDurable";
 
 type LoginInput = {
   email: string;
@@ -15,10 +16,9 @@ type LoginInput = {
 export async function POST(req: Request) {
   const ip = getClientIp(req);
   try {
-    rateLimitOrThrow(`login:ip:${ip}`, { limit: 20, windowMs: 60_000 });
+    await rateLimitOrThrowDurable(`login:ip:${ip}`, { limit: 20, windowMs: 60_000 });
   } catch (e) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const retryAfterSec = (e as any).retryAfterSec ?? 60;
+    const retryAfterSec = e instanceof RateLimitError ? e.retryAfterSec : 60;
     return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(retryAfterSec) } });
   }
 
@@ -32,6 +32,14 @@ export async function POST(req: Request) {
 
   const { emailNorm } = normalizeEmail(body.email ?? "");
   const password = body.password ?? "";
+
+  // Also rate limit per-identity (emailNorm) to slow down password guessing.
+  try {
+    await rateLimitOrThrowDurable(`login:emailNorm:${emailNorm}`, { limit: 10, windowMs: 60_000 });
+  } catch (e) {
+    const retryAfterSec = e instanceof RateLimitError ? e.retryAfterSec : 60;
+    return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(retryAfterSec) } });
+  }
 
   // Generic failure response to avoid enumeration.
   const fail = () => NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
