@@ -21,8 +21,8 @@ Implement **durable rate limiting backed by SQLite (Prisma)**.
 - Store counter state in a DB table keyed by `(key, windowStart)`.
 - Use a **fixed-window** algorithm (simple + predictable).
 - Apply limits at minimum to:
-  - `POST /api/auth/signup`
-  - `POST /api/auth/login`
+  - `POST /api/auth/signup` (per-IP + per-emailNorm)
+  - `POST /api/auth/login` (per-IP + per-emailNorm)
 - Keys to rate limit:
   - per-IP: `signup:ip:<ip>`, `login:ip:<ip>`
   - per-identity: `signup:emailNorm:<emailNorm>`, `login:emailNorm:<emailNorm>`
@@ -30,7 +30,15 @@ Implement **durable rate limiting backed by SQLite (Prisma)**.
   - respond with **429**
   - include **Retry-After** seconds
 
-Provide a cleanup mechanism (best-effort): delete windows older than N minutes/hours.
+Provide a cleanup mechanism (best-effort): delete windows older than N windows.
+
+### Configuration (env)
+
+Defaults (per minute):
+- `RATE_LIMIT_SIGNUP_IP_PER_MIN=10`
+- `RATE_LIMIT_SIGNUP_EMAIL_PER_MIN=5`
+- `RATE_LIMIT_LOGIN_IP_PER_MIN=20`
+- `RATE_LIMIT_LOGIN_EMAIL_PER_MIN=10`
 
 ## Options considered
 
