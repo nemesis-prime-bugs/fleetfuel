@@ -35,6 +35,17 @@ Format:
 - Notes:
   - Native addon; install ran `node-gyp-build` (expected for argon2).
 
+### 2026-02-07 (UTC) — Downgrade Prisma to v6 for stable local SQLite sessions
+- Reason: Prisma v7 client constructor requires adapter/accelerate configuration; Prisma v6 supports classic DATABASE_URL sqlite without adapters.
+- Commands:
+  - `cd apps/web`
+  - `corepack pnpm remove @prisma/adapter-better-sqlite3 better-sqlite3 @types/better-sqlite3`
+  - `corepack pnpm add prisma@6.19.2 @prisma/client@6.19.2`
+  - Update `prisma/schema.prisma` datasource to include `url = env("DATABASE_URL")`
+  - `corepack pnpm exec prisma generate`
+- Notes:
+  - Removed better-sqlite3 native addon.
+
 ### 2026-02-07 (UTC) — Add tsx for TypeScript script execution (test harness)
 - Intent: run a minimal password hash/verify self-test without adding a heavy test framework yet.
 - Registry: https://registry.npmjs.org/

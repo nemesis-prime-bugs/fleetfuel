@@ -8,7 +8,7 @@ declare global {
 }
 
 function createPrisma() {
-  // Validate env early (Prisma reads DATABASE_URL internally).
+  // Validate env early; Prisma 6 reads DATABASE_URL from the schema datasource.
   getEnv();
   return new PrismaClient();
 }
