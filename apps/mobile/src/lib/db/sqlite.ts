@@ -87,6 +87,17 @@ export async function migrate(dbName = "fleetfuel") {
       FOREIGN KEY(vehicleId) REFERENCES vehicles(id) ON DELETE CASCADE
     );
     CREATE INDEX IF NOT EXISTS fillups_vehicle_occurredAt_idx ON fillups(vehicleId, occurredAt);
+
+    CREATE TABLE IF NOT EXISTS receipts (
+      id TEXT PRIMARY KEY NOT NULL,
+      fillUpId TEXT NOT NULL,
+      contentType TEXT NOT NULL,
+      storageKey TEXT NOT NULL,
+      sha256 TEXT,
+      createdAt TEXT NOT NULL,
+      FOREIGN KEY(fillUpId) REFERENCES fillups(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS receipts_fillup_idx ON receipts(fillUpId);
   `);
 
   return db;

@@ -36,6 +36,7 @@ function createServerFetch(baseUrl: string) {
 
 import { createDriverRepoSqlite } from "./local/driverRepoSqlite";
 import { createFillUpRepoSqlite } from "./local/fillUpRepoSqlite";
+import { createReceiptRepoLocal } from "./local/receiptRepoLocal";
 import { createTripRepoSqlite } from "./local/tripRepoSqlite";
 import { createVehicleRepoSqlite } from "./local/vehicleRepoSqlite";
 
@@ -53,9 +54,7 @@ export function createMobileRepos(opts: { mode: StorageMode; baseUrl?: string })
 
     const trips: TripRepo = createTripRepoSqlite();
 
-    const receipts: ReceiptRepo = {
-      uploadToFillUp: notImplemented("receipts.uploadToFillUp"),
-    };
+    const receipts: ReceiptRepo = createReceiptRepoLocal();
 
     const profile: ProfileRepo = {
       get: notImplemented("profile.get"),

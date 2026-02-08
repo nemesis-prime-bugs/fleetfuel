@@ -1,4 +1,4 @@
-import type { FillUp, FillUpRepo, ListResult } from "@fleetfuel/shared";
+import type { FillUp, FillUpRepo, ListResult, Receipt } from "@fleetfuel/shared";
 import { v4 as uuidv4 } from "uuid";
 
 import { migrate } from "../../db/sqlite";
@@ -26,13 +26,32 @@ export function createFillUpRepoSqlite(opts?: { dbName?: string }): FillUpRepo {
   const dbName = opts?.dbName ?? "fleetfuel";
 
   return {
-    async listByVehicle(vehicleId): Promise<ListResult<FillUp>> {
+    async listByVehicle(vehicleId): Promise<ListResult<FillUp & { receipts?: Receipt[] }>> {
       const db = await migrate(dbName);
       const res = await db.query(
         "SELECT id, vehicleId, occurredAt, odometer, fuelAmount, totalCost, currency, isFullTank, stationName, notes FROM fillups WHERE vehicleId = ? ORDER BY occurredAt DESC;",
         [vehicleId]
       );
-      const items = (res.values ?? []).map(fromRow);
+      const fillups = (res.values ?? []).map(fromRow);
+
+      if (fillups.length === 0) return { items: [] };
+
+      const ids = fillups.map((f) => f.id);
+      const placeholders = ids.map(() => "?").join(",");
+      const receiptRes = await db.query(
+        `SELECT id, fillUpId, contentType, storageKey, sha256, createdAt FROM receipts WHERE fillUpId IN (${placeholders}) ORDER BY createdAt ASC;`,
+        ids
+      );
+      const receipts = (receiptRes.values ?? []) as Receipt[];
+
+      const receiptsByFillUpId = new Map<string, Receipt[]>();
+      for (const r of receipts) {
+        const list = receiptsByFillUpId.get(r.fillUpId) ?? [];
+        list.push(r);
+        receiptsByFillUpId.set(r.fillUpId, list);
+      }
+
+      const items = fillups.map((f) => ({ ...f, receipts: receiptsByFillUpId.get(f.id) ?? [] }));
       return { items };
     },
 

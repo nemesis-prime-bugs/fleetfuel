@@ -25,6 +25,17 @@ Format:
   - Capacitor community plugin; used for on-device storage only.
   - uuid is used for client-side IDs in local mode.
 
+### 2026-02-08 (UTC) — Mobile local receipt filesystem dependency
+- Operator/machine: nemesis-prime@NemesisPrimeBot
+- Repo: FleetFuel (`projects/fleetfuel`)
+- Intent: mobile local receipts storage (filesystem) for MOB-5.
+- Registry: https://registry.npmjs.org/
+- Commands:
+  - `cd apps/mobile`
+  - `corepack pnpm@10.6.1 add @capacitor/filesystem@7.1.4`
+- Notes:
+  - Used to store receipt images locally on-device.
+
 
 ### 2026-02-07 (UTC) — Add Prisma (DB ORM) for local SQLite persistence
 - Operator/machine: nemesis-prime@NemesisPrimeBot

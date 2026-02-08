@@ -20,6 +20,9 @@ importers:
       '@capacitor/core':
         specifier: 7.4.3
         version: 7.4.3
+      '@capacitor/filesystem':
+        specifier: 7.1.4
+        version: 7.1.4(@capacitor/core@7.4.3)
       '@capacitor/ios':
         specifier: 7.4.3
         version: 7.4.3(@capacitor/core@7.4.3)
@@ -373,10 +376,18 @@ packages:
   '@capacitor/core@7.4.3':
     resolution: {integrity: sha512-wCWr8fQ9Wxn0466vPg7nMn0tivbNVjNy1yL4GvDSIZuZx7UpU2HeVGNe9QjN/quEd+YLRFeKEBLBw619VqUiNg==}
 
+  '@capacitor/filesystem@7.1.4':
+    resolution: {integrity: sha512-BdUnOVulHAtruW2GeC9o7e9LO5aFcVYqNn3dLypJSOck/WipUFNfI0QWoUS0FVGeqBbDJgFGi3zjXJx0lzbDkA==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
+
   '@capacitor/ios@7.4.3':
     resolution: {integrity: sha512-VNm7cHODgh3KK/4ZC2rXU9gBlvHii/mYFLI+XMXwq24nhB679QxHhz+pUuI7PatYoM2q4MAL0NR/dRgehKCaSA==}
     peerDependencies:
       '@capacitor/core': ^7.4.0
+
+  '@capacitor/synapse@1.0.4':
+    resolution: {integrity: sha512-/C1FUo8/OkKuAT4nCIu/34ny9siNHr9qtFezu4kxm6GY1wNFxrCFWjfYx5C1tUhVGz3fxBABegupkpjXvjCHrw==}
 
   '@date-fns/tz@1.4.1':
     resolution: {integrity: sha512-P5LUNhtbj6YfI3iJjw5EL9eUAG6OitD0W3fWQcpQjDRc/QIsL0tRNuO1PcDvPccWL1fSTXXdE1ds+l95DV/OFA==}
@@ -4587,9 +4598,16 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  '@capacitor/filesystem@7.1.4(@capacitor/core@7.4.3)':
+    dependencies:
+      '@capacitor/core': 7.4.3
+      '@capacitor/synapse': 1.0.4
+
   '@capacitor/ios@7.4.3(@capacitor/core@7.4.3)':
     dependencies:
       '@capacitor/core': 7.4.3
+
+  '@capacitor/synapse@1.0.4': {}
 
   '@date-fns/tz@1.4.1': {}
 
