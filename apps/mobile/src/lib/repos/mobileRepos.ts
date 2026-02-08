@@ -34,6 +34,8 @@ function createServerFetch(baseUrl: string) {
   };
 }
 
+import { createDriverRepoSqlite } from "./local/driverRepoSqlite";
+import { createTripRepoSqlite } from "./local/tripRepoSqlite";
 import { createVehicleRepoSqlite } from "./local/vehicleRepoSqlite";
 
 export function createMobileRepos(opts: { mode: StorageMode; baseUrl?: string }): FleetFuelRepos {
@@ -51,19 +53,9 @@ export function createMobileRepos(opts: { mode: StorageMode; baseUrl?: string })
       remove: notImplemented("fillups.remove"),
     };
 
-    const drivers: DriverRepo = {
-      list: notImplemented("drivers.list"),
-      create: notImplemented("drivers.create"),
-      rename: notImplemented("drivers.rename"),
-      remove: notImplemented("drivers.remove"),
-    };
+    const drivers: DriverRepo = createDriverRepoSqlite();
 
-    const trips: TripRepo = {
-      listByVehicle: notImplemented("trips.listByVehicle"),
-      create: notImplemented("trips.create"),
-      patch: notImplemented("trips.patch"),
-      remove: notImplemented("trips.remove"),
-    };
+    const trips: TripRepo = createTripRepoSqlite();
 
     const receipts: ReceiptRepo = {
       uploadToFillUp: notImplemented("receipts.uploadToFillUp"),

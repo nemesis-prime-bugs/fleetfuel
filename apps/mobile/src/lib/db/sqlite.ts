@@ -31,8 +31,10 @@ export async function ensureDbOpen(dbName = "fleetfuel") {
 export async function migrate(dbName = "fleetfuel") {
   const db = await ensureDbOpen(dbName);
 
-  // v1 schema (minimal): vehicles
+  // v1 schema (minimal): vehicles, drivers, trips
   await db.execute(`
+    PRAGMA foreign_keys = ON;
+
     CREATE TABLE IF NOT EXISTS vehicles (
       id TEXT PRIMARY KEY NOT NULL,
       name TEXT NOT NULL,
@@ -42,6 +44,32 @@ export async function migrate(dbName = "fleetfuel") {
       updatedAt TEXT NOT NULL
     );
     CREATE UNIQUE INDEX IF NOT EXISTS vehicles_name_unique ON vehicles(name);
+
+    CREATE TABLE IF NOT EXISTS drivers (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL,
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS drivers_name_unique ON drivers(name);
+
+    CREATE TABLE IF NOT EXISTS trips (
+      id TEXT PRIMARY KEY NOT NULL,
+      vehicleId TEXT NOT NULL,
+      driverId TEXT NOT NULL,
+      startedAt TEXT NOT NULL,
+      endedAt TEXT NOT NULL,
+      odometerStart REAL NOT NULL,
+      odometerEnd REAL NOT NULL,
+      distance REAL NOT NULL,
+      notes TEXT,
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT NOT NULL,
+      FOREIGN KEY(vehicleId) REFERENCES vehicles(id) ON DELETE CASCADE,
+      FOREIGN KEY(driverId) REFERENCES drivers(id) ON DELETE RESTRICT
+    );
+    CREATE INDEX IF NOT EXISTS trips_vehicle_startedAt_idx ON trips(vehicleId, startedAt);
+    CREATE INDEX IF NOT EXISTS trips_driver_startedAt_idx ON trips(driverId, startedAt);
   `);
 
   return db;
