@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/password";
 import { normalizeEmail } from "@/lib/auth/signupValidation";
+import { createSession } from "@/lib/auth/sessionRepo";
+import { setSessionCookie } from "@/lib/auth/sessionCookie";
 
 type LoginInput = {
   email: string;
@@ -35,6 +37,9 @@ export async function POST(req: Request) {
 
   const ok = await verifyPassword(user.passwordHash, password);
   if (!ok) return fail();
+
+  const session = await createSession(user.id);
+  await setSessionCookie(session.rawToken, session.expiresAt);
 
   return NextResponse.json({ userId: user.id }, { status: 200 });
 }
