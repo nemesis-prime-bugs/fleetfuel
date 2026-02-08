@@ -31,9 +31,19 @@ export async function POST(req: Request) {
 
   ensureReceiptsDir();
 
-  const bytes = Buffer.from(await file.arrayBuffer());
+  const MAX_BYTES = 10 * 1024 * 1024; // 10MB
+  const ALLOWED_TYPES = new Set(["image/jpeg", "image/png"]);
 
-  // Skeleton: store as random file; hardening (type/size/magic/EXIF) in next tasks.
+  if (!ALLOWED_TYPES.has(file.type)) {
+    return NextResponse.json({ error: "Only JPEG/PNG allowed" }, { status: 400 });
+  }
+
+  const bytes = Buffer.from(await file.arrayBuffer());
+  if (bytes.length > MAX_BYTES) {
+    return NextResponse.json({ error: "File too large" }, { status: 400 });
+  }
+
+  // Hardening continues in next tasks (magic bytes, EXIF strip).
   const ext = path.extname(file.name || "").slice(0, 8) || ".bin";
   const basename = `${crypto.randomUUID()}${ext}`;
   const relKey = `receipts/${basename}`;
