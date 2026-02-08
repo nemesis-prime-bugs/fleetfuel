@@ -38,3 +38,6 @@ next-env.d.ts
 
 # local sqlite db
 *.db
+
+# local receipt storage
+data/
