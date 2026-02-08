@@ -69,6 +69,8 @@ export type Profile = {
   themePreference: ThemePreference;
 };
 
+export * from "./repos";
+
 export function clampInt(n: unknown, opts: { min: number; max: number }) {
   const v = Math.round(Number(n));
   if (!Number.isFinite(v)) return null;

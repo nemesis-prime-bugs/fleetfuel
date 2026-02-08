@@ -35,9 +35,11 @@ export async function GET(req: Request) {
       include: { driver: { select: { name: true } } },
     });
 
+    type TripRow = (typeof trips)[number];
+
     const rows: string[][] = [
       ["startedAt", "endedAt", "driver", "odometerStart", "odometerEnd", "distanceKm", "notes"],
-      ...trips.map((t) => [
+      ...trips.map((t: TripRow) => [
         t.startedAt.toISOString(),
         t.endedAt.toISOString(),
         t.driver.name,
@@ -66,9 +68,11 @@ export async function GET(req: Request) {
     orderBy: { occurredAt: "asc" },
   });
 
+  type FillUpRow = (typeof fillUps)[number];
+
   const rows: string[][] = [
     ["occurredAt", "odometer", "fuelAmount", "totalCostCents", "currency", "isFullTank", "stationName", "notes"],
-    ...fillUps.map((f) => [
+    ...fillUps.map((f: FillUpRow) => [
       f.occurredAt.toISOString(),
       String(f.odometer),
       String(f.fuelAmount),

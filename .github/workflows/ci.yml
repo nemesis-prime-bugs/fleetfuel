@@ -23,13 +23,13 @@ jobs:
         with:
           node-version: "22"
           cache: "pnpm"
-          cache-dependency-path: apps/web/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Enable Corepack
         run: corepack enable
 
       - name: Install deps
-        run: pnpm -C apps/web install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Audit (best-effort)
         run: pnpm -C apps/web audit || true

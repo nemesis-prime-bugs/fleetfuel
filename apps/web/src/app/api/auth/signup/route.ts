@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/password";
 import { validateAndNormalizeSignupInput, type SignupInput } from "@/lib/auth/signupValidation";
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
   const passwordHash = await hashPassword(input.password);
 
   try {
-    const user = await prisma.$transaction(async (tx) => {
+    const user = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const createdUser = await tx.user.create({
         data: {
           email: input.email,

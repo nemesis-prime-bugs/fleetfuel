@@ -56,6 +56,7 @@ export type Profile = {
     phone?: string | null;
     themePreference: ThemePreference;
 };
+export * from "./repos";
 export declare function clampInt(n: unknown, opts: {
     min: number;
     max: number;
