@@ -8,13 +8,39 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [accountType, setAccountType] = useState<AccountType>("PERSONAL");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   return (
     <main style={{ maxWidth: 520, margin: "40px auto", padding: 24, fontFamily: "system-ui" }}>
       <h1 style={{ fontSize: 28, fontWeight: 800 }}>Create your FleetFuel account</h1>
       <p style={{ marginTop: 8, opacity: 0.8 }}>MVP signup (UI skeleton).</p>
 
-      <form style={{ marginTop: 24, display: "grid", gap: 14 }}>
+      <form
+        style={{ marginTop: 24, display: "grid", gap: 14 }}
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setError(null);
+          setSubmitting(true);
+          try {
+            const res = await fetch("/api/auth/signup", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password, accountType }),
+            });
+            const data = (await res.json()) as { error?: string };
+            if (!res.ok) {
+              setError(data.error ?? "Signup failed");
+              return;
+            }
+            window.location.href = "/app";
+          } catch {
+            setError("Network error");
+          } finally {
+            setSubmitting(false);
+          }
+        }}
+      >
         <label style={{ display: "grid", gap: 6 }}>
           <span>Email</span>
           <input
@@ -63,27 +89,28 @@ export default function SignupPage() {
           </label>
         </fieldset>
 
+        {error ? (
+          <div style={{ background: "#ffe9e9", border: "1px solid #ffb3b3", padding: 10, borderRadius: 8 }}>
+            <b>Signup failed:</b> {error}
+          </div>
+        ) : null}
+
         <button
           type="submit"
-          disabled
-          title="Backend not wired yet"
+          disabled={submitting}
           style={{
             padding: 12,
             borderRadius: 8,
             border: 0,
             background: "#111",
             color: "white",
-            opacity: 0.6,
-            cursor: "not-allowed",
+            opacity: submitting ? 0.7 : 1,
+            cursor: submitting ? "wait" : "pointer",
           }}
         >
-          Create account
+          {submitting ? "Creating…" : "Create account"}
         </button>
       </form>
-
-      <pre style={{ marginTop: 18, background: "#f6f6f6", padding: 12, borderRadius: 8, fontSize: 12 }}>
-        {JSON.stringify({ email, password: password ? "***" : "", accountType }, null, 2)}
-      </pre>
     </main>
   );
 }
