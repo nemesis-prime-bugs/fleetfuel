@@ -129,6 +129,44 @@ export default function TripsPage() {
     if (vehicleId) refreshTrips(vehicleId);
   }, [vehicleId]);
 
+  const grouped = useMemo(() => {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const dateKey = (iso: string) => {
+      const d = new Date(iso);
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    };
+
+    type DayGroup = {
+      day: string; // YYYY-MM-DD local
+      totalKm: number;
+      byDriver: Array<{ driverId: string; driverName: string; totalKm: number; trips: Trip[] }>;
+    };
+
+    const days = new Map<string, Map<string, { driverId: string; driverName: string; trips: Trip[]; totalKm: number }>>();
+
+    for (const t of trips) {
+      const day = dateKey(t.startedAt);
+      if (!days.has(day)) days.set(day, new Map());
+      const driverName = t.driver?.name ?? "(driver)";
+      const driverKey = t.driverId;
+      const dm = days.get(day)!;
+      if (!dm.has(driverKey)) dm.set(driverKey, { driverId: driverKey, driverName, trips: [], totalKm: 0 });
+      const entry = dm.get(driverKey)!;
+      entry.trips.push(t);
+      entry.totalKm += t.distance;
+    }
+
+    const out: DayGroup[] = [];
+    for (const [day, dm] of days.entries()) {
+      const byDriver = Array.from(dm.values()).sort((a, b) => a.driverName.localeCompare(b.driverName));
+      const totalKm = byDriver.reduce((sum, d) => sum + d.totalKm, 0);
+      out.push({ day, totalKm, byDriver });
+    }
+
+    out.sort((a, b) => (a.day < b.day ? 1 : -1));
+    return out;
+  }, [trips]);
+
   return (
     <main style={{ maxWidth: 1000, margin: "40px auto", padding: 24, fontFamily: "system-ui" }}>
       <h1 style={{ fontSize: 28, fontWeight: 800 }}>Trips (Tagebuch)</h1>
@@ -291,78 +329,104 @@ export default function TripsPage() {
       </section>
 
       <section style={{ marginTop: 20 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700 }}>History</h2>
+        <h2 style={{ fontSize: 18, fontWeight: 700 }}>History (grouped by day)</h2>
         {loading ? <p>Loading…</p> : null}
         {!loading && trips.length === 0 ? <p style={{ opacity: 0.8 }}>No trips yet.</p> : null}
 
-        <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-          {trips.map((t) => (
-            <div key={t.id} style={{ padding: 12, border: "1px solid #eee", borderRadius: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                <div>
-                  <div style={{ fontWeight: 700 }}>
-                    {t.driver?.name ?? "(driver)"} · {t.distance} km
-                  </div>
-                  <div style={{ opacity: 0.8, fontSize: 13 }}>
-                    {new Date(t.startedAt).toLocaleString()} → {new Date(t.endedAt).toLocaleString()} · Odo {t.odometerStart} → {t.odometerEnd}
-                  </div>
-                  {t.notes ? <div style={{ marginTop: 6, fontSize: 13 }}>{t.notes}</div> : null}
-                </div>
+        <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
+          {grouped.map((g) => (
+            <div key={g.day} style={{ padding: 12, border: "1px solid #eee", borderRadius: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+                <div style={{ fontWeight: 800 }}>{new Date(`${g.day}T00:00:00`).toLocaleDateString()}</div>
+                <div style={{ opacity: 0.8, fontSize: 13 }}>Total: {g.totalKm} km</div>
+              </div>
 
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <button
-                    type="button"
-                    style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ddd", background: "white" }}
-                    onClick={async () => {
-                      const newStart = window.prompt("New start (YYYY-MM-DDTHH:MM)", toLocalInputValue(t.startedAt));
-                      if (!newStart) return;
-                      const newEnd = window.prompt("New end (YYYY-MM-DDTHH:MM)", toLocalInputValue(t.endedAt));
-                      if (!newEnd) return;
-                      const newOdoStart = window.prompt("New odometer start", String(t.odometerStart));
-                      if (!newOdoStart) return;
-                      const newOdoEnd = window.prompt("New odometer end", String(t.odometerEnd));
-                      if (!newOdoEnd) return;
-                      setError(null);
-                      try {
-                        const res = await fetch(`/api/trips/${t.id}`, {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            startedAt: fromLocalInputValue(newStart),
-                            endedAt: fromLocalInputValue(newEnd),
-                            odometerStart: Number(newOdoStart),
-                            odometerEnd: Number(newOdoEnd),
-                          }),
-                        });
-                        const data = (await res.json()) as { error?: string };
-                        if (!res.ok) throw new Error(data.error ?? "Update failed");
-                        await refreshTrips(vehicleId);
-                      } catch (e) {
-                        setError((e as Error).message);
-                      }
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ffb3b3", background: "#ffe9e9" }}
-                    onClick={async () => {
-                      if (!window.confirm("Delete this trip?")) return;
-                      setError(null);
-                      try {
-                        const res = await fetch(`/api/trips/${t.id}`, { method: "DELETE" });
-                        const data = (await res.json()) as { error?: string };
-                        if (!res.ok) throw new Error(data.error ?? "Delete failed");
-                        await refreshTrips(vehicleId);
-                      } catch (e) {
-                        setError((e as Error).message);
-                      }
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
+              <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+                {g.byDriver.map((d) => (
+                  <div key={d.driverId} style={{ padding: 10, border: "1px solid #f0f0f0", borderRadius: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                      <div style={{ fontWeight: 700 }}>{d.driverName}</div>
+                      <div style={{ opacity: 0.8, fontSize: 13 }}>{d.totalKm} km</div>
+                    </div>
+
+                    <div style={{ marginTop: 8, display: "grid", gap: 8 }}>
+                      {d.trips.map((t) => (
+                        <div key={t.id} style={{ padding: 10, border: "1px solid #eee", borderRadius: 10 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                            <div>
+                              <div style={{ fontWeight: 700 }}>{t.distance} km</div>
+                              <div style={{ opacity: 0.8, fontSize: 13 }}>
+                                {new Date(t.startedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} → {new Date(t.endedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                {" "}· Odo {t.odometerStart} → {t.odometerEnd}
+                              </div>
+                              {t.notes ? <div style={{ marginTop: 6, fontSize: 13 }}>{t.notes}</div> : null}
+                            </div>
+
+                            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                              <button
+                                type="button"
+                                style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ddd", background: "white" }}
+                                onClick={async () => {
+                                  const newStart = window.prompt("New start (YYYY-MM-DDTHH:MM)", toLocalInputValue(t.startedAt));
+                                  if (!newStart) return;
+                                  const newEnd = window.prompt("New end (YYYY-MM-DDTHH:MM)", toLocalInputValue(t.endedAt));
+                                  if (!newEnd) return;
+                                  const newOdoStart = window.prompt("New odometer start", String(t.odometerStart));
+                                  if (!newOdoStart) return;
+                                  const newOdoEnd = window.prompt("New odometer end", String(t.odometerEnd));
+                                  if (!newOdoEnd) return;
+                                  setError(null);
+                                  try {
+                                    const res = await fetch(`/api/trips/${t.id}`, {
+                                      method: "PATCH",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({
+                                        startedAt: fromLocalInputValue(newStart),
+                                        endedAt: fromLocalInputValue(newEnd),
+                                        odometerStart: Number(newOdoStart),
+                                        odometerEnd: Number(newOdoEnd),
+                                      }),
+                                    });
+                                    const data = (await res.json()) as { error?: string };
+                                    if (!res.ok) throw new Error(data.error ?? "Update failed");
+                                    await refreshTrips(vehicleId);
+                                  } catch (e) {
+                                    setError((e as Error).message);
+                                  }
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                style={{
+                                  padding: "6px 10px",
+                                  borderRadius: 8,
+                                  border: "1px solid #ffb3b3",
+                                  background: "#ffe9e9",
+                                }}
+                                onClick={async () => {
+                                  if (!window.confirm("Delete this trip?")) return;
+                                  setError(null);
+                                  try {
+                                    const res = await fetch(`/api/trips/${t.id}`, { method: "DELETE" });
+                                    const data = (await res.json()) as { error?: string };
+                                    if (!res.ok) throw new Error(data.error ?? "Delete failed");
+                                    await refreshTrips(vehicleId);
+                                  } catch (e) {
+                                    setError((e as Error).message);
+                                  }
+                                }}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
