@@ -35,6 +35,22 @@ export default function FillUpsPage() {
   const [currency, setCurrency] = useState("EUR");
   const [isFullTank, setIsFullTank] = useState(true);
 
+  async function patchFillUp(id: string, patch: Partial<FillUp>) {
+    const res = await fetch(`/api/fillups/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    const data = (await res.json()) as { error?: string };
+    if (!res.ok) throw new Error(data.error ?? "Update failed");
+  }
+
+  async function deleteFillUp(id: string) {
+    const res = await fetch(`/api/fillups/${id}`, { method: "DELETE" });
+    const data = (await res.json()) as { error?: string };
+    if (!res.ok) throw new Error(data.error ?? "Delete failed");
+  }
+
   const canSubmit = useMemo(() => {
     return !!vehicleId && !!occurredAt && !!odometer && !!fuelAmount && !!totalCost;
   }, [vehicleId, occurredAt, odometer, fuelAmount, totalCost]);
@@ -224,7 +240,56 @@ export default function FillUpsPage() {
                     {f.isFullTank ? " · Full" : ""}
                   </div>
                 </div>
-                <div style={{ opacity: 0.6, fontSize: 12, alignSelf: "center" }}>{f.id}</div>
+
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <button
+                    type="button"
+                    style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ddd", background: "white" }}
+                    onClick={async () => {
+                      const newOdo = window.prompt("New odometer", String(f.odometer));
+                      if (!newOdo) return;
+                      const newFuel = window.prompt("New fuel amount", String(f.fuelAmount));
+                      if (!newFuel) return;
+                      const newCost = window.prompt(
+                        `New total cost (${f.currency})`,
+                        (f.totalCost / 100).toFixed(2)
+                      );
+                      if (!newCost) return;
+                      try {
+                        await patchFillUp(f.id, {
+                          odometer: Number(newOdo),
+                          fuelAmount: Number(newFuel),
+                          totalCost: Math.round(Number(newCost) * 100),
+                        } as any);
+                        await refreshFillUps(vehicleId);
+                      } catch (e) {
+                        setError((e as Error).message);
+                      }
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 8,
+                      border: "1px solid #ffb3b3",
+                      background: "#ffe9e9",
+                    }}
+                    onClick={async () => {
+                      if (!window.confirm("Delete this fill-up?")) return;
+                      try {
+                        await deleteFillUp(f.id);
+                        await refreshFillUps(vehicleId);
+                      } catch (e) {
+                        setError((e as Error).message);
+                      }
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}
