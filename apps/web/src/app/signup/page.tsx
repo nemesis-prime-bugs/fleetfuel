@@ -14,7 +14,9 @@ export default function SignupPage() {
   return (
     <main style={{ maxWidth: 520, margin: "40px auto", padding: 24, fontFamily: "system-ui" }}>
       <h1 style={{ fontSize: 28, fontWeight: 800 }}>Create your FleetFuel account</h1>
-      <p style={{ marginTop: 8, opacity: 0.8 }}>MVP signup (UI skeleton).</p>
+      <p style={{ marginTop: 8, opacity: 0.8 }}>
+        MVP signup. Already have an account? <a href="/login">Log in</a>.
+      </p>
 
       <form
         style={{ marginTop: 24, display: "grid", gap: 14 }}

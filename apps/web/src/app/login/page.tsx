@@ -11,7 +11,9 @@ export default function LoginPage() {
   return (
     <main style={{ maxWidth: 520, margin: "40px auto", padding: 24, fontFamily: "system-ui" }}>
       <h1 style={{ fontSize: 28, fontWeight: 800 }}>Log in</h1>
-      <p style={{ marginTop: 8, opacity: 0.8 }}>MVP login (UI skeleton).</p>
+      <p style={{ marginTop: 8, opacity: 0.8 }}>
+        MVP login. No account yet? <a href="/signup">Create one</a>.
+      </p>
 
       <form
         style={{ marginTop: 24, display: "grid", gap: 14 }}
