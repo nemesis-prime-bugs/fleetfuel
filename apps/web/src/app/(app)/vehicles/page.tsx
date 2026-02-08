@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { toast } from "sonner";
+
 type Vehicle = {
   id: string;
   name: string;
@@ -19,7 +27,6 @@ type VehiclePatch = {
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [fuelType, setFuelType] = useState<Vehicle["fuelType"]>("GASOLINE");
@@ -28,7 +35,6 @@ export default function VehiclesPage() {
 
   async function refresh() {
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch("/api/vehicles");
       if (res.status === 401) {
@@ -39,14 +45,16 @@ export default function VehiclesPage() {
       if (!res.ok) throw new Error(data.error ?? "Failed to load vehicles");
       setVehicles(data.vehicles ?? []);
     } catch (e) {
-      setError((e as Error).message);
+      toast.error((e as Error).message);
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    refresh();
+    refresh().catch(() => {
+      /* ignore */
+    });
   }, []);
 
   async function patchVehicle(id: string, patch: VehiclePatch) {
@@ -66,138 +74,153 @@ export default function VehiclesPage() {
   }
 
   return (
-    <main style={{ maxWidth: 900, margin: "40px auto", padding: 24, fontFamily: "system-ui" }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800 }}>Vehicles</h1>
+    <div className="mx-auto w-full max-w-4xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Vehicles</h1>
+        <p className="text-muted-foreground">Manage your vehicles.</p>
+      </div>
 
-      <section style={{ marginTop: 20, padding: 16, border: "1px solid #eee", borderRadius: 12 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700 }}>Add vehicle</h2>
-        <form
-          style={{ display: "grid", gap: 12, gridTemplateColumns: "2fr 1fr 1fr auto", marginTop: 12 }}
-          onSubmit={async (e) => {
-            e.preventDefault();
-            setSubmitting(true);
-            setError(null);
-            try {
-              const res = await fetch("/api/vehicles", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, fuelType, unitSystem }),
-              });
-              const data = (await res.json()) as { error?: string };
-              if (!res.ok) throw new Error(data.error ?? "Create failed");
-              setName("");
-              await refresh();
-            } catch (e2) {
-              setError((e2 as Error).message);
-            } finally {
-              setSubmitting(false);
-            }
-          }}
-        >
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Vehicle name (e.g., Golf)"
-            required
-            style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-          />
-          <select
-            value={fuelType}
-            onChange={(e) => setFuelType(e.target.value as Vehicle["fuelType"])}
-            style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-          >
-            <option value="GASOLINE">Gasoline</option>
-            <option value="DIESEL">Diesel</option>
-            <option value="ELECTRIC">Electric</option>
-            <option value="HYBRID">Hybrid</option>
-            <option value="OTHER">Other</option>
-          </select>
-          <select
-            value={unitSystem}
-            onChange={(e) => setUnitSystem(e.target.value as Vehicle["unitSystem"])}
-            style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-          >
-            <option value="METRIC">Metric</option>
-            <option value="IMPERIAL">Imperial</option>
-          </select>
-          <button
-            type="submit"
-            disabled={submitting}
-            style={{
-              padding: "10px 12px",
-              borderRadius: 8,
-              border: 0,
-              background: "#111",
-              color: "white",
-              cursor: submitting ? "wait" : "pointer",
-              opacity: submitting ? 0.7 : 1,
+      <Card>
+        <CardHeader>
+          <CardTitle>Add vehicle</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form
+            className="grid gap-4 md:grid-cols-4"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setSubmitting(true);
+              try {
+                const res = await fetch("/api/vehicles", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ name, fuelType, unitSystem }),
+                });
+                const data = (await res.json()) as { error?: string };
+                if (!res.ok) throw new Error(data.error ?? "Create failed");
+                setName("");
+                toast.success("Vehicle added");
+                await refresh();
+              } catch (e2) {
+                toast.error((e2 as Error).message);
+              } finally {
+                setSubmitting(false);
+              }
             }}
           >
-            {submitting ? "Adding…" : "Add"}
-          </button>
-        </form>
-        {error ? <p style={{ marginTop: 12, color: "#b00020" }}>{error}</p> : null}
-      </section>
-
-      <section style={{ marginTop: 20 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700 }}>Your vehicles</h2>
-        {loading ? <p>Loading…</p> : null}
-        {!loading && vehicles.length === 0 ? <p style={{ opacity: 0.8 }}>No vehicles yet.</p> : null}
-
-        <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-          {vehicles.map((v) => (
-            <div key={v.id} style={{ padding: 12, border: "1px solid #eee", borderRadius: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                <div>
-                  <div style={{ fontWeight: 700 }}>{v.name}</div>
-                  <div style={{ opacity: 0.8, fontSize: 13 }}>
-                    {v.fuelType} · {v.unitSystem}
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <button
-                    type="button"
-                    style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ddd", background: "white" }}
-                    onClick={async () => {
-                      const newName = window.prompt("New vehicle name", v.name);
-                      if (!newName) return;
-                      try {
-                        await patchVehicle(v.id, { name: newName });
-                        await refresh();
-                      } catch (e) {
-                        setError((e as Error).message);
-                      }
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    style={{
-                      padding: "6px 10px",
-                      borderRadius: 8,
-                      border: "1px solid #ffb3b3",
-                      background: "#ffe9e9",
-                    }}
-                    onClick={async () => {
-                      if (!window.confirm(`Delete vehicle '${v.name}'?`)) return;
-                      try {
-                        await deleteVehicle(v.id);
-                        await refresh();
-                      } catch (e) {
-                        setError((e as Error).message);
-                      }
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
+            <div className="grid gap-2 md:col-span-2">
+              <Label>Name</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Golf" required />
             </div>
-          ))}
-        </div>
-      </section>
-    </main>
+
+            <div className="grid gap-2">
+              <Label>Fuel type</Label>
+              <Select value={fuelType} onValueChange={(v) => setFuelType(v as Vehicle["fuelType"])}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="GASOLINE">Gasoline</SelectItem>
+                  <SelectItem value="DIESEL">Diesel</SelectItem>
+                  <SelectItem value="ELECTRIC">Electric</SelectItem>
+                  <SelectItem value="HYBRID">Hybrid</SelectItem>
+                  <SelectItem value="OTHER">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Unit system</Label>
+              <Select value={unitSystem} onValueChange={(v) => setUnitSystem(v as Vehicle["unitSystem"])}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="METRIC">Metric</SelectItem>
+                  <SelectItem value="IMPERIAL">Imperial</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="md:col-span-4 flex justify-end">
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Adding…" : "Add"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Your vehicles</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
+          {!loading && vehicles.length === 0 ? <p className="text-sm text-muted-foreground">No vehicles yet.</p> : null}
+
+          {vehicles.length ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Fuel</TableHead>
+                    <TableHead>Units</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {vehicles.map((v) => (
+                    <TableRow key={v.id}>
+                      <TableCell className="font-medium">{v.name}</TableCell>
+                      <TableCell>{v.fuelType}</TableCell>
+                      <TableCell>{v.unitSystem}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="inline-flex gap-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={async () => {
+                              const newName = window.prompt("New vehicle name", v.name);
+                              if (!newName) return;
+                              try {
+                                await patchVehicle(v.id, { name: newName });
+                                toast.success("Vehicle updated");
+                                await refresh();
+                              } catch (e) {
+                                toast.error((e as Error).message);
+                              }
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={async () => {
+                              if (!window.confirm(`Delete vehicle '${v.name}'?`)) return;
+                              try {
+                                await deleteVehicle(v.id);
+                                toast.success("Vehicle deleted");
+                                await refresh();
+                              } catch (e) {
+                                toast.error((e as Error).message);
+                              }
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
