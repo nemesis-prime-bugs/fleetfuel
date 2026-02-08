@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/password";
 import { validateAndNormalizeSignupInput, type SignupInput } from "@/lib/auth/signupValidation";
+import { createSession } from "@/lib/auth/sessionRepo";
+import { setSessionCookie } from "@/lib/auth/sessionCookie";
 
 export async function POST(req: Request) {
   let body: SignupInput;
@@ -40,6 +42,9 @@ export async function POST(req: Request) {
 
       return createdUser;
     });
+
+    const session = await createSession(user.id);
+    await setSessionCookie(session.rawToken, session.expiresAt);
 
     return NextResponse.json({ user }, { status: 201 });
   } catch {
