@@ -5,6 +5,7 @@ import { verifyPassword } from "@/lib/auth/password";
 import { normalizeEmail } from "@/lib/auth/signupValidation";
 import { createSession } from "@/lib/auth/sessionRepo";
 import { setSessionCookie } from "@/lib/auth/sessionCookie";
+import { getClientIp, rateLimitOrThrow } from "@/lib/auth/rateLimit";
 
 type LoginInput = {
   email: string;
@@ -12,6 +13,15 @@ type LoginInput = {
 };
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  try {
+    rateLimitOrThrow(`login:ip:${ip}`, { limit: 20, windowMs: 60_000 });
+  } catch (e) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const retryAfterSec = (e as any).retryAfterSec ?? 60;
+    return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(retryAfterSec) } });
+  }
+
   let body: LoginInput;
 
   try {
