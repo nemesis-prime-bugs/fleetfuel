@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FleetFuel</string>
+    <string name="title_activity_main">FleetFuel</string>
+    <string name="package_name">com.fleetfuel.app</string>
+    <string name="custom_url_scheme">com.fleetfuel.app</string>
+</resources>
