@@ -7,6 +7,7 @@ import { createSession } from "@/lib/auth/sessionRepo";
 import { setSessionCookie } from "@/lib/auth/sessionCookie";
 import { getClientIp } from "@/lib/auth/rateLimit";
 import { rateLimitOrThrowDurable, RateLimitError } from "@/lib/auth/rateLimitDurable";
+import { getEnv } from "@/lib/env";
 
 type LoginInput = {
   email: string;
@@ -14,9 +15,10 @@ type LoginInput = {
 };
 
 export async function POST(req: Request) {
+  const env = getEnv();
   const ip = getClientIp(req);
   try {
-    await rateLimitOrThrowDurable(`login:ip:${ip}`, { limit: 20, windowMs: 60_000 });
+    await rateLimitOrThrowDurable(`login:ip:${ip}`, { limit: env.RATE_LIMIT_LOGIN_IP_PER_MIN, windowMs: 60_000 });
   } catch (e) {
     const retryAfterSec = e instanceof RateLimitError ? e.retryAfterSec : 60;
     return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(retryAfterSec) } });
@@ -35,7 +37,10 @@ export async function POST(req: Request) {
 
   // Also rate limit per-identity (emailNorm) to slow down password guessing.
   try {
-    await rateLimitOrThrowDurable(`login:emailNorm:${emailNorm}`, { limit: 10, windowMs: 60_000 });
+    await rateLimitOrThrowDurable(`login:emailNorm:${emailNorm}`, {
+      limit: env.RATE_LIMIT_LOGIN_EMAIL_PER_MIN,
+      windowMs: 60_000,
+    });
   } catch (e) {
     const retryAfterSec = e instanceof RateLimitError ? e.retryAfterSec : 60;
     return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(retryAfterSec) } });

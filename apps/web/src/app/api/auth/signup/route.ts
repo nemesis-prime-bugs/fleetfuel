@@ -7,11 +7,13 @@ import { createSession } from "@/lib/auth/sessionRepo";
 import { setSessionCookie } from "@/lib/auth/sessionCookie";
 import { getClientIp } from "@/lib/auth/rateLimit";
 import { rateLimitOrThrowDurable, RateLimitError } from "@/lib/auth/rateLimitDurable";
+import { getEnv } from "@/lib/env";
 
 export async function POST(req: Request) {
+  const env = getEnv();
   const ip = getClientIp(req);
   try {
-    await rateLimitOrThrowDurable(`signup:ip:${ip}`, { limit: 10, windowMs: 60_000 });
+    await rateLimitOrThrowDurable(`signup:ip:${ip}`, { limit: env.RATE_LIMIT_SIGNUP_IP_PER_MIN, windowMs: 60_000 });
   } catch (e) {
     const retryAfterSec = e instanceof RateLimitError ? e.retryAfterSec : 60;
     return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(retryAfterSec) } });
@@ -33,7 +35,10 @@ export async function POST(req: Request) {
   }
 
   try {
-    await rateLimitOrThrowDurable(`signup:emailNorm:${input.emailNorm}`, { limit: 5, windowMs: 60_000 });
+    await rateLimitOrThrowDurable(`signup:emailNorm:${input.emailNorm}`, {
+      limit: env.RATE_LIMIT_SIGNUP_EMAIL_PER_MIN,
+      windowMs: 60_000,
+    });
   } catch (e) {
     const retryAfterSec = e instanceof RateLimitError ? e.retryAfterSec : 60;
     return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(retryAfterSec) } });
