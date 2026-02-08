@@ -35,6 +35,7 @@ function createServerFetch(baseUrl: string) {
 }
 
 import { createDriverRepoSqlite } from "./local/driverRepoSqlite";
+import { createFillUpRepoSqlite } from "./local/fillUpRepoSqlite";
 import { createTripRepoSqlite } from "./local/tripRepoSqlite";
 import { createVehicleRepoSqlite } from "./local/vehicleRepoSqlite";
 
@@ -46,12 +47,7 @@ export function createMobileRepos(opts: { mode: StorageMode; baseUrl?: string })
 
     const vehicles: VehicleRepo = createVehicleRepoSqlite();
 
-    const fillups: FillUpRepo = {
-      listByVehicle: notImplemented("fillups.listByVehicle"),
-      create: notImplemented("fillups.create"),
-      patch: notImplemented("fillups.patch"),
-      remove: notImplemented("fillups.remove"),
-    };
+    const fillups: FillUpRepo = createFillUpRepoSqlite();
 
     const drivers: DriverRepo = createDriverRepoSqlite();
 
