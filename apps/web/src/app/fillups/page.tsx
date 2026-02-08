@@ -7,6 +7,13 @@ type Vehicle = {
   name: string;
 };
 
+type Receipt = {
+  id: string;
+  storageKey: string;
+  contentType: string;
+  createdAt: string;
+};
+
 type FillUp = {
   id: string;
   vehicleId: string;
@@ -18,6 +25,7 @@ type FillUp = {
   isFullTank: boolean;
   stationName: string | null;
   notes: string | null;
+  receipts?: Receipt[];
 };
 
 export default function FillUpsPage() {
@@ -242,6 +250,42 @@ export default function FillUpsPage() {
                 </div>
 
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <label
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 8,
+                      border: "1px solid #ddd",
+                      background: "white",
+                      cursor: "pointer",
+                    }}
+                    title="Attach receipt"
+                  >
+                    📎 Receipt
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png"
+                      style={{ display: "none" }}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setError(null);
+                        try {
+                          const fd = new FormData();
+                          fd.set("fillUpId", f.id);
+                          fd.set("file", file);
+                          const res = await fetch("/api/receipts/upload", { method: "POST", body: fd });
+                          const data = (await res.json()) as { error?: string };
+                          if (!res.ok) throw new Error(data.error ?? "Upload failed");
+                          await refreshFillUps(vehicleId);
+                        } catch (e2) {
+                          setError((e2 as Error).message);
+                        } finally {
+                          e.target.value = "";
+                        }
+                      }}
+                    />
+                  </label>
+
                   <button
                     type="button"
                     style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ddd", background: "white" }}
