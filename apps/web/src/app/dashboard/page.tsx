@@ -157,7 +157,7 @@ export default function DashboardPage() {
         </a>
       </section>
 
-      <section style={{ marginTop: 16, display: "flex", gap: 12, alignItems: "center" }}>
+      <section style={{ marginTop: 16, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
         <label>
           Vehicle:&nbsp;
           <select
@@ -172,6 +172,18 @@ export default function DashboardPage() {
             ))}
           </select>
         </label>
+
+        {vehicleId ? (
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <span style={{ opacity: 0.8, fontSize: 13 }}>Export CSV:</span>
+            <a href={`/api/export/csv?vehicleId=${encodeURIComponent(vehicleId)}&kind=fillups`} target="_blank" rel="noreferrer">
+              Fill-ups
+            </a>
+            <a href={`/api/export/csv?vehicleId=${encodeURIComponent(vehicleId)}&kind=trips`} target="_blank" rel="noreferrer">
+              Trips
+            </a>
+          </div>
+        ) : null}
       </section>
 
       <section style={{ marginTop: 20, padding: 16, border: "1px solid #eee", borderRadius: 12 }}>
