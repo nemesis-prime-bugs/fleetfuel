@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
+import sharp from "sharp";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
@@ -51,20 +52,30 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid PNG file" }, { status: 400 });
   }
 
-  // Hardening continues in next tasks (EXIF strip).
-  const ext = path.extname(file.name || "").slice(0, 8) || ".bin";
+  // EXIF stripping: re-encode image (does not preserve metadata unless withMetadata()).
+  const strippedBytes = await (async () => {
+    if (file.type === "image/jpeg") {
+      return await sharp(bytes).jpeg({ quality: 85 }).toBuffer();
+    }
+    if (file.type === "image/png") {
+      return await sharp(bytes).png().toBuffer();
+    }
+    return bytes;
+  })();
+
+  const ext = file.type === "image/jpeg" ? ".jpg" : file.type === "image/png" ? ".png" : ".bin";
   const basename = `${crypto.randomUUID()}${ext}`;
   const relKey = `receipts/${basename}`;
   const fullPath = path.join(RECEIPTS_DIR, basename);
 
-  fs.writeFileSync(fullPath, bytes);
+  fs.writeFileSync(fullPath, strippedBytes);
 
   const receipt = await prisma.receipt.create({
     data: {
       fillUpId,
       storageKey: relKey,
       contentType: file.type || "application/octet-stream",
-      sha256: crypto.createHash("sha256").update(bytes).digest("hex"),
+      sha256: crypto.createHash("sha256").update(strippedBytes).digest("hex"),
     },
   });
 

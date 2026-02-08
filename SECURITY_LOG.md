@@ -35,6 +35,13 @@ Format:
 - Notes:
   - Native addon; install ran `node-gyp-build` (expected for argon2).
 
+### 2026-02-08 (UTC) — Add sharp for receipt EXIF stripping
+- Intent: re-encode uploaded JPEG/PNG to strip EXIF metadata (privacy hardening).
+- Command:
+  - `cd apps/web`
+  - `corepack pnpm add sharp@0.34.5`
+- Notes: native dependency; install scripts expected.
+
 ### 2026-02-07 (UTC) — Downgrade Prisma to v6 for stable local SQLite sessions
 - Reason: Prisma v7 client constructor requires adapter/accelerate configuration; Prisma v6 supports classic DATABASE_URL sqlite without adapters.
 - Commands:
