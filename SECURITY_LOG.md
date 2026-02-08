@@ -12,6 +12,20 @@ Format:
 
 ## Entries
 
+### 2026-02-08 (UTC) — Mobile local persistence dependencies (SQLite)
+- Operator/machine: nemesis-prime@NemesisPrimeBot
+- Repo: FleetFuel (`projects/fleetfuel`)
+- Intent: enable mobile local-first persistence (SQLite) for MOB-4.
+- Registry: https://registry.npmjs.org/
+- Commands:
+  - `cd apps/mobile`
+  - `corepack pnpm@10.6.1 add @capacitor-community/sqlite@7.0.0 jeep-sqlite@2.8.0`
+  - `corepack pnpm@10.6.1 add -D uuid@11.1.0 @types/uuid@10.0.0`
+- Notes:
+  - Capacitor community plugin; used for on-device storage only.
+  - uuid is used for client-side IDs in local mode.
+
+
 ### 2026-02-07 (UTC) — Add Prisma (DB ORM) for local SQLite persistence
 - Operator/machine: nemesis-prime@NemesisPrimeBot
 - Repo: FleetFuel (`projects/fleetfuel`)

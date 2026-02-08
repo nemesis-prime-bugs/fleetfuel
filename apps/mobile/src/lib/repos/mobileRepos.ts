@@ -34,18 +34,15 @@ function createServerFetch(baseUrl: string) {
   };
 }
 
+import { createVehicleRepoSqlite } from "./local/vehicleRepoSqlite";
+
 export function createMobileRepos(opts: { mode: StorageMode; baseUrl?: string }): FleetFuelRepos {
   if (opts.mode === "local") {
     const notImplemented = (name: string) => async () => {
       throw new Error(`${name} not implemented for local mode yet (see MOB-4/MOB-5)`);
     };
 
-    const vehicles: VehicleRepo = {
-      list: notImplemented("vehicles.list"),
-      create: notImplemented("vehicles.create"),
-      patch: notImplemented("vehicles.patch"),
-      remove: notImplemented("vehicles.remove"),
-    };
+    const vehicles: VehicleRepo = createVehicleRepoSqlite();
 
     const fillups: FillUpRepo = {
       listByVehicle: notImplemented("fillups.listByVehicle"),
