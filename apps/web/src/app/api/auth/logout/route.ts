@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { clearSessionCookie, getSessionCookie } from "@/lib/auth/sessionCookie";
 import { deleteSessionByRawToken } from "@/lib/auth/sessionRepo";
 
-export async function POST() {
+export async function POST(req: Request) {
   const rawToken = await getSessionCookie();
 
   if (rawToken) {
@@ -17,5 +17,6 @@ export async function POST() {
 
   await clearSessionCookie();
 
-  return NextResponse.json({ ok: true }, { status: 200 });
+  // Redirect is handy for form submits; JSON clients can ignore it.
+  return NextResponse.redirect(new URL("/login", req.url), { status: 303 });
 }
