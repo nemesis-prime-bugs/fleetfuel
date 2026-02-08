@@ -335,6 +335,29 @@ export default function FillUpsPage() {
                   </button>
                 </div>
               </div>
+
+              {f.receipts?.length ? (
+                <div style={{ marginTop: 10, display: "grid", gap: 6 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>Receipts</div>
+                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13, opacity: 0.9 }}>
+                    {f.receipts.map((r) => {
+                      const name = r.storageKey.split("/").pop() ?? r.id;
+                      return (
+                        <li key={r.id}>
+                          {name} &nbsp;·&nbsp;
+                          <a href={`/api/receipts/${r.id}?inline=1`} target="_blank" rel="noreferrer">
+                            View
+                          </a>
+                          {" "}
+                          <a href={`/api/receipts/${r.id}`} target="_blank" rel="noreferrer">
+                            Download
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ) : null}
             </div>
           ))}
         </div>

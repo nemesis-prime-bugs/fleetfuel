@@ -30,6 +30,12 @@ export async function GET(req: Request) {
   const fillUps = await prisma.fillUp.findMany({
     where: { vehicleId },
     orderBy: { occurredAt: "desc" },
+    include: {
+      receipts: {
+        select: { id: true, storageKey: true, contentType: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+      },
+    },
   });
 
   return NextResponse.json({ fillUps }, { status: 200 });

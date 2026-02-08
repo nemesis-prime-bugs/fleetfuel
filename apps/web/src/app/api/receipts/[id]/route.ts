@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db";
 import { requireUserApi } from "@/lib/auth/requireUserApi";
 import { RECEIPTS_DIR } from "@/lib/receipts/storage";
 
-export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { user, error } = await requireUserApi();
   if (error) return error;
 
@@ -34,12 +34,15 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     return NextResponse.json({ error: "File missing" }, { status: 404 });
   }
 
+  const url = new URL(req.url);
+  const inline = url.searchParams.get("inline") === "1";
+
   const bytes = fs.readFileSync(fullPath);
   return new NextResponse(bytes, {
     status: 200,
     headers: {
       "Content-Type": receipt.contentType,
-      "Content-Disposition": `attachment; filename=\"${basename}\"`,
+      "Content-Disposition": `${inline ? "inline" : "attachment"}; filename=\"${basename}\"`,
       "Cache-Control": "private, max-age=0, no-store",
     },
   });
