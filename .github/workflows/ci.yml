@@ -29,6 +29,9 @@ jobs:
       - name: Install deps
         run: pnpm -C apps/web install --frozen-lockfile
 
+      - name: Audit (best-effort)
+        run: pnpm -C apps/web audit || true
+
       - name: Lint
         run: pnpm -C apps/web run lint
 
