@@ -1,6 +1,18 @@
 "use client";
 
+import { format } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { toast } from "sonner";
 
 type Vehicle = {
   id: string;
@@ -34,9 +46,8 @@ export default function FillUpsPage() {
 
   const [fillUps, setFillUps] = useState<FillUp[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const [occurredAt, setOccurredAt] = useState(() => new Date().toISOString().slice(0, 10));
+  const [occurredAt, setOccurredAt] = useState<Date>(() => new Date());
   const [odometer, setOdometer] = useState("");
   const [fuelAmount, setFuelAmount] = useState("");
   const [totalCost, setTotalCost] = useState("");
@@ -77,7 +88,6 @@ export default function FillUpsPage() {
 
   async function refreshFillUps(vId: string) {
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch(`/api/fillups?vehicleId=${encodeURIComponent(vId)}`);
       if (res.status === 401) {
@@ -88,7 +98,7 @@ export default function FillUpsPage() {
       if (!res.ok) throw new Error(data.error ?? "Failed to load fill-ups");
       setFillUps(data.fillUps ?? []);
     } catch (e) {
-      setError((e as Error).message);
+      toast.error((e as Error).message);
     } finally {
       setLoading(false);
     }
@@ -106,262 +116,255 @@ export default function FillUpsPage() {
   }, [vehicleId]);
 
   return (
-    <main style={{ maxWidth: 1000, margin: "40px auto", padding: 24, fontFamily: "system-ui" }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800 }}>Fill-ups</h1>
+    <div className="mx-auto w-full max-w-6xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Fill-ups</h1>
+        <p className="text-muted-foreground">Track fuel purchases and receipts.</p>
+      </div>
 
-      <section style={{ marginTop: 16, display: "flex", gap: 12, alignItems: "center" }}>
-        <label>
-          Vehicle:&nbsp;
-          <select
-            value={vehicleId}
-            onChange={(e) => setVehicleId(e.target.value)}
-            style={{ padding: 8, borderRadius: 8, border: "1px solid #ccc" }}
-          >
-            {vehicles.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <a href="/vehicles" style={{ opacity: 0.8 }}>
-          Manage vehicles
-        </a>
-      </section>
-
-      <section style={{ marginTop: 20, padding: 16, border: "1px solid #eee", borderRadius: 12 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700 }}>Add fill-up</h2>
-        <form
-          style={{ display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", marginTop: 12 }}
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (!canSubmit) return;
-            setError(null);
-            try {
-              const res = await fetch("/api/fillups", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  vehicleId,
-                  occurredAt: new Date(occurredAt).toISOString(),
-                  odometer: Number(odometer),
-                  fuelAmount: Number(fuelAmount),
-                  totalCost: Math.round(Number(totalCost) * 100),
-                  currency,
-                  isFullTank,
-                }),
-              });
-              const data = (await res.json()) as { error?: string };
-              if (!res.ok) throw new Error(data.error ?? "Create failed");
-              setOdometer("");
-              setFuelAmount("");
-              setTotalCost("");
-              await refreshFillUps(vehicleId);
-            } catch (e2) {
-              setError((e2 as Error).message);
-            }
-          }}
-        >
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>Date</span>
-            <input
-              value={occurredAt}
-              onChange={(e) => setOccurredAt(e.target.value)}
-              type="date"
-              required
-              style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-            />
-          </label>
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>Odometer</span>
-            <input
-              value={odometer}
-              onChange={(e) => setOdometer(e.target.value)}
-              placeholder="e.g. 120000"
-              inputMode="numeric"
-              required
-              style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-            />
-          </label>
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>Fuel amount</span>
-            <input
-              value={fuelAmount}
-              onChange={(e) => setFuelAmount(e.target.value)}
-              placeholder="e.g. 45.2"
-              inputMode="decimal"
-              required
-              style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-            />
-          </label>
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>Total cost ({currency})</span>
-            <input
-              value={totalCost}
-              onChange={(e) => setTotalCost(e.target.value)}
-              placeholder="e.g. 70.40"
-              inputMode="decimal"
-              required
-              style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-            />
-          </label>
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>&nbsp;</span>
-            <button
-              type="submit"
-              disabled={!canSubmit}
-              style={{
-                padding: 12,
-                borderRadius: 8,
-                border: 0,
-                background: "#111",
-                color: "white",
-                opacity: canSubmit ? 1 : 0.6,
-              }}
-            >
-              Add
-            </button>
-          </label>
-
-          <label style={{ display: "flex", gap: 8, alignItems: "center", gridColumn: "1 / span 5" }}>
-            <input type="checkbox" checked={isFullTank} onChange={(e) => setIsFullTank(e.target.checked)} />
-            Full tank
-          </label>
-        </form>
-
-        {error ? <p style={{ marginTop: 12, color: "#b00020" }}>{error}</p> : null}
-      </section>
-
-      <section style={{ marginTop: 20 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700 }}>History</h2>
-        {loading ? <p>Loading…</p> : null}
-        {!loading && fillUps.length === 0 ? <p style={{ opacity: 0.8 }}>No fill-ups yet.</p> : null}
-
-        <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-          {fillUps.map((f) => (
-            <div key={f.id} style={{ padding: 12, border: "1px solid #eee", borderRadius: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                <div>
-                  <div style={{ fontWeight: 700 }}>{new Date(f.occurredAt).toLocaleDateString()}</div>
-                  <div style={{ opacity: 0.8, fontSize: 13 }}>
-                    Odo: {f.odometer} · Fuel: {f.fuelAmount} · Cost: {(f.totalCost / 100).toFixed(2)} {f.currency}
-                    {f.isFullTank ? " · Full" : ""}
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <label
-                    style={{
-                      padding: "6px 10px",
-                      borderRadius: 8,
-                      border: "1px solid #ddd",
-                      background: "white",
-                      cursor: "pointer",
-                    }}
-                    title="Attach receipt"
-                  >
-                    📎 Receipt
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png"
-                      style={{ display: "none" }}
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        setError(null);
-                        try {
-                          const fd = new FormData();
-                          fd.set("fillUpId", f.id);
-                          fd.set("file", file);
-                          const res = await fetch("/api/receipts/upload", { method: "POST", body: fd });
-                          const data = (await res.json()) as { error?: string };
-                          if (!res.ok) throw new Error(data.error ?? "Upload failed");
-                          await refreshFillUps(vehicleId);
-                        } catch (e2) {
-                          setError((e2 as Error).message);
-                        } finally {
-                          e.target.value = "";
-                        }
-                      }}
-                    />
-                  </label>
-
-                  <button
-                    type="button"
-                    style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ddd", background: "white" }}
-                    onClick={async () => {
-                      const newOdo = window.prompt("New odometer", String(f.odometer));
-                      if (!newOdo) return;
-                      const newFuel = window.prompt("New fuel amount", String(f.fuelAmount));
-                      if (!newFuel) return;
-                      const newCost = window.prompt(
-                        `New total cost (${f.currency})`,
-                        (f.totalCost / 100).toFixed(2)
-                      );
-                      if (!newCost) return;
-                      try {
-                        await patchFillUp(f.id, {
-                          odometer: Number(newOdo),
-                          fuelAmount: Number(newFuel),
-                          totalCost: Math.round(Number(newCost) * 100),
-                        } as any);
-                        await refreshFillUps(vehicleId);
-                      } catch (e) {
-                        setError((e as Error).message);
-                      }
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    style={{
-                      padding: "6px 10px",
-                      borderRadius: 8,
-                      border: "1px solid #ffb3b3",
-                      background: "#ffe9e9",
-                    }}
-                    onClick={async () => {
-                      if (!window.confirm("Delete this fill-up?")) return;
-                      try {
-                        await deleteFillUp(f.id);
-                        await refreshFillUps(vehicleId);
-                      } catch (e) {
-                        setError((e as Error).message);
-                      }
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-
-              {f.receipts?.length ? (
-                <div style={{ marginTop: 10, display: "grid", gap: 6 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>Receipts</div>
-                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13, opacity: 0.9 }}>
-                    {f.receipts.map((r) => {
-                      const name = r.storageKey.split("/").pop() ?? r.id;
-                      return (
-                        <li key={r.id}>
-                          {name} &nbsp;·&nbsp;
-                          <a href={`/api/receipts/${r.id}?inline=1`} target="_blank" rel="noreferrer">
-                            View
-                          </a>
-                          {" "}
-                          <a href={`/api/receipts/${r.id}`} target="_blank" rel="noreferrer">
-                            Download
-                          </a>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ) : null}
-            </div>
-          ))}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Label className="text-sm">Vehicle</Label>
+          <Select value={vehicleId} onValueChange={setVehicleId}>
+            <SelectTrigger className="w-[260px]">
+              <SelectValue placeholder="Select vehicle" />
+            </SelectTrigger>
+            <SelectContent>
+              {vehicles.map((v) => (
+                <SelectItem key={v.id} value={v.id}>
+                  {v.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      </section>
-    </main>
+
+        <Button asChild variant="secondary">
+          <a href="/vehicles">Manage vehicles</a>
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Add fill-up</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form
+            className="grid gap-4 md:grid-cols-6"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (!canSubmit) return;
+              try {
+                const res = await fetch("/api/fillups", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    vehicleId,
+                    occurredAt: new Date(occurredAt).toISOString(),
+                    odometer: Number(odometer),
+                    fuelAmount: Number(fuelAmount),
+                    totalCost: Math.round(Number(totalCost) * 100),
+                    currency,
+                    isFullTank,
+                  }),
+                });
+                const data = (await res.json()) as { error?: string };
+                if (!res.ok) throw new Error(data.error ?? "Create failed");
+                setOdometer("");
+                setFuelAmount("");
+                setTotalCost("");
+                toast.success("Fill-up added");
+                await refreshFillUps(vehicleId);
+              } catch (e2) {
+                toast.error((e2 as Error).message);
+              }
+            }}
+          >
+            <div className="grid gap-2 md:col-span-2">
+              <Label>Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="outline" className="justify-start">
+                    {occurredAt ? format(occurredAt, "yyyy-MM-dd") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={occurredAt} onSelect={(d) => d && setOccurredAt(d)} initialFocus />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="grid gap-2 md:col-span-2">
+              <Label>Odometer</Label>
+              <Input value={odometer} onChange={(e) => setOdometer(e.target.value)} inputMode="numeric" placeholder="e.g. 120000" />
+            </div>
+
+            <div className="grid gap-2 md:col-span-1">
+              <Label>Fuel</Label>
+              <Input value={fuelAmount} onChange={(e) => setFuelAmount(e.target.value)} inputMode="decimal" placeholder="e.g. 45.2" />
+            </div>
+
+            <div className="grid gap-2 md:col-span-1">
+              <Label>Total cost ({currency})</Label>
+              <Input value={totalCost} onChange={(e) => setTotalCost(e.target.value)} inputMode="decimal" placeholder="e.g. 70.40" />
+            </div>
+
+            <div className="flex items-center gap-2 md:col-span-6">
+              <Checkbox id="fullTank" checked={isFullTank} onCheckedChange={(v) => setIsFullTank(Boolean(v))} />
+              <Label htmlFor="fullTank">Full tank</Label>
+            </div>
+
+            <div className="md:col-span-6 flex justify-end">
+              <Button type="submit" disabled={!canSubmit}>
+                Add
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
+          {!loading && fillUps.length === 0 ? <p className="text-sm text-muted-foreground">No fill-ups yet.</p> : null}
+
+          {fillUps.length ? (
+            <div className="space-y-4">
+              {fillUps.map((f) => (
+                <Card key={f.id}>
+                  <CardHeader className="pb-3">
+                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <CardTitle className="text-base">{new Date(f.occurredAt).toLocaleDateString()}</CardTitle>
+                        <CardDescription>
+                          Odo {f.odometer} · Fuel {f.fuelAmount} · Cost {(f.totalCost / 100).toFixed(2)} {f.currency}
+                          {f.isFullTank ? " · Full" : ""}
+                        </CardDescription>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <label className="inline-flex">
+                          <Button asChild variant="secondary" size="sm">
+                            <span>Attach receipt</span>
+                          </Button>
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              try {
+                                const fd = new FormData();
+                                fd.set("fillUpId", f.id);
+                                fd.set("file", file);
+                                const res = await fetch("/api/receipts/upload", { method: "POST", body: fd });
+                                const data = (await res.json()) as { error?: string };
+                                if (!res.ok) throw new Error(data.error ?? "Upload failed");
+                                toast.success("Receipt uploaded");
+                                await refreshFillUps(vehicleId);
+                              } catch (e2) {
+                                toast.error((e2 as Error).message);
+                              } finally {
+                                e.target.value = "";
+                              }
+                            }}
+                          />
+                        </label>
+
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={async () => {
+                            const newOdo = window.prompt("New odometer", String(f.odometer));
+                            if (!newOdo) return;
+                            const newFuel = window.prompt("New fuel amount", String(f.fuelAmount));
+                            if (!newFuel) return;
+                            const newCost = window.prompt(`New total cost (${f.currency})`, (f.totalCost / 100).toFixed(2));
+                            if (!newCost) return;
+                            try {
+                              await patchFillUp(f.id, {
+                                odometer: Number(newOdo),
+                                fuelAmount: Number(newFuel),
+                                totalCost: Math.round(Number(newCost) * 100),
+                              } as any);
+                              toast.success("Fill-up updated");
+                              await refreshFillUps(vehicleId);
+                            } catch (e) {
+                              toast.error((e as Error).message);
+                            }
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={async () => {
+                            if (!window.confirm("Delete this fill-up?")) return;
+                            try {
+                              await deleteFillUp(f.id);
+                              toast.success("Fill-up deleted");
+                              await refreshFillUps(vehicleId);
+                            } catch (e) {
+                              toast.error((e as Error).message);
+                            }
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  {f.receipts?.length ? (
+                    <CardContent>
+                      <div className="text-sm font-semibold mb-2">Receipts</div>
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>File</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {f.receipts.map((r) => {
+                              const name = r.storageKey.split("/").pop() ?? r.id;
+                              return (
+                                <TableRow key={r.id}>
+                                  <TableCell className="font-medium">{name}</TableCell>
+                                  <TableCell className="text-right">
+                                    <div className="inline-flex gap-2">
+                                      <Button asChild size="sm" variant="secondary">
+                                        <a href={`/api/receipts/${r.id}?inline=1`} target="_blank" rel="noreferrer">
+                                          View
+                                        </a>
+                                      </Button>
+                                      <Button asChild size="sm" variant="secondary">
+                                        <a href={`/api/receipts/${r.id}`} target="_blank" rel="noreferrer">
+                                          Download
+                                        </a>
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  ) : null}
+                </Card>
+              ))}
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
