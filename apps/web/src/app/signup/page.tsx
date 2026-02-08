@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type AccountType = "PERSONAL" | "COMPANY";
 
@@ -10,6 +10,17 @@ export default function SignupPage() {
   const [accountType, setAccountType] = useState<AccountType>("PERSONAL");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    // If already logged in, redirect to /app.
+    fetch("/api/auth/me")
+      .then((r) => {
+        if (r.ok) window.location.href = "/app";
+      })
+      .catch(() => {
+        // ignore
+      });
+  }, []);
 
   return (
     <main style={{ maxWidth: 520, margin: "40px auto", padding: 24, fontFamily: "system-ui" }}>
