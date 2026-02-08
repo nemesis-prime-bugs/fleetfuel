@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 type Vehicle = {
   id: string;
   name: string;
@@ -21,11 +26,12 @@ type BarDatum = {
 
 function Bars({ title, unit, data }: { title: string; unit: string; data: BarDatum[] }) {
   const max = Math.max(0, ...data.map((d) => d.value));
+
   const width = 920;
   const height = 220;
-  const padX = 20;
-  const padTop = 20;
-  const padBottom = 40;
+  const padX = 24;
+  const padTop = 18;
+  const padBottom = 36;
   const innerW = width - padX * 2;
   const innerH = height - padTop - padBottom;
 
@@ -33,37 +39,44 @@ function Bars({ title, unit, data }: { title: string; unit: string; data: BarDat
   const barW = data.length ? Math.max(6, Math.floor((innerW - barGap * (data.length - 1)) / data.length)) : 0;
 
   return (
-    <div style={{ marginTop: 16, padding: 16, border: "1px solid #eee", borderRadius: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
-        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>{title}</h3>
-        <div style={{ opacity: 0.75, fontSize: 13 }}>{unit}</div>
-      </div>
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">{title}</CardTitle>
+        <CardDescription>{unit}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {data.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No data.</p>
+        ) : (
+          <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
+            <rect x={0} y={0} width={width} height={height} fill="transparent" />
 
-      {data.length === 0 ? (
-        <p style={{ opacity: 0.8, marginTop: 10 }}>No data.</p>
-      ) : (
-        <svg viewBox={`0 0 ${width} ${height}`} style={{ width: "100%", height: "auto", marginTop: 10 }}>
-          <rect x={0} y={0} width={width} height={height} fill="white" />
+            {/* baseline */}
+            <line x1={padX} y1={padTop + innerH} x2={padX + innerW} y2={padTop + innerH} stroke="hsl(var(--border))" />
 
-          {/* baseline */}
-          <line x1={padX} y1={padTop + innerH} x2={padX + innerW} y2={padTop + innerH} stroke="#ddd" />
-
-          {data.map((d, i) => {
-            const h = max > 0 ? (d.value / max) * innerH : 0;
-            const x = padX + i * (barW + barGap);
-            const y = padTop + (innerH - h);
-            return (
-              <g key={d.label}>
-                <rect x={x} y={y} width={barW} height={h} rx={4} fill="#111" opacity={0.85} />
-                <text x={x + barW / 2} y={padTop + innerH + 18} textAnchor="middle" fontSize={12} fill="#555">
-                  {d.label}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-      )}
-    </div>
+            {data.map((d, i) => {
+              const h = max > 0 ? (d.value / max) * innerH : 0;
+              const x = padX + i * (barW + barGap);
+              const y = padTop + (innerH - h);
+              return (
+                <g key={d.label}>
+                  <rect x={x} y={y} width={barW} height={h} rx={4} fill="hsl(var(--chart-1))" opacity={0.9} />
+                  <text
+                    x={x + barW / 2}
+                    y={padTop + innerH + 18}
+                    textAnchor="middle"
+                    fontSize={12}
+                    fill="hsl(var(--muted-foreground))"
+                  >
+                    {d.label}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -82,11 +95,10 @@ export default function DashboardPage() {
   }, [months]);
 
   const spendBars = useMemo<BarDatum[]>(() => {
-    // keep last 12 months to avoid overcrowding
     const last = months.slice(-12);
     return last.map((m) => ({
-      label: m.month.slice(5), // MM
-      value: Math.round(m.totalCost / 100), // EUR
+      label: m.month.slice(5),
+      value: Math.round(m.totalCost / 100),
     }));
   }, [months]);
 
@@ -141,100 +153,103 @@ export default function DashboardPage() {
   }, [vehicleId]);
 
   return (
-    <main style={{ maxWidth: 1000, margin: "40px auto", padding: 24, fontFamily: "system-ui" }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800 }}>Dashboard</h1>
-      <p style={{ opacity: 0.8, marginTop: 8 }}>Monthly totals (spend + volume) per vehicle.</p>
+    <div className="mx-auto w-full max-w-6xl space-y-6">
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">Monthly spend + fuel totals per vehicle.</p>
+        </div>
 
-      <section style={{ marginTop: 16, display: "flex", gap: 12, alignItems: "center" }}>
-        <a href="/vehicles" style={{ opacity: 0.9 }}>
-          Vehicles
-        </a>
-        <a href="/fillups" style={{ opacity: 0.9 }}>
-          Fill-ups
-        </a>
-        <a href="/trips" style={{ opacity: 0.9 }}>
-          Trips
-        </a>
-      </section>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Select value={vehicleId} onValueChange={setVehicleId}>
+            <SelectTrigger className="w-[240px]">
+              <SelectValue placeholder="Select vehicle" />
+            </SelectTrigger>
+            <SelectContent>
+              {vehicles.map((v) => (
+                <SelectItem key={v.id} value={v.id}>
+                  {v.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-      <section style={{ marginTop: 16, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-        <label>
-          Vehicle:&nbsp;
-          <select
-            value={vehicleId}
-            onChange={(e) => setVehicleId(e.target.value)}
-            style={{ padding: 8, borderRadius: 8, border: "1px solid #ccc" }}
-          >
-            {vehicles.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {vehicleId ? (
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <span style={{ opacity: 0.8, fontSize: 13 }}>Export CSV:</span>
-            <a href={`/api/export/csv?vehicleId=${encodeURIComponent(vehicleId)}&kind=fillups`} target="_blank" rel="noreferrer">
-              Fill-ups
-            </a>
-            <a href={`/api/export/csv?vehicleId=${encodeURIComponent(vehicleId)}&kind=trips`} target="_blank" rel="noreferrer">
-              Trips
-            </a>
+          <div className="flex gap-2">
+            <Button asChild variant="secondary" disabled={!vehicleId}>
+              <a href={`/api/export/csv?vehicleId=${encodeURIComponent(vehicleId)}&kind=fillups`} target="_blank" rel="noreferrer">
+                Export fill-ups
+              </a>
+            </Button>
+            <Button asChild variant="secondary" disabled={!vehicleId}>
+              <a href={`/api/export/csv?vehicleId=${encodeURIComponent(vehicleId)}&kind=trips`} target="_blank" rel="noreferrer">
+                Export trips
+              </a>
+            </Button>
           </div>
-        ) : null}
-      </section>
+        </div>
+      </div>
 
-      <section style={{ marginTop: 20, padding: 16, border: "1px solid #eee", borderRadius: 12 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700 }}>Totals</h2>
-        <div style={{ marginTop: 10, display: "flex", gap: 16, flexWrap: "wrap" }}>
-          <div style={{ padding: 12, border: "1px solid #f0f0f0", borderRadius: 12 }}>
-            <div style={{ opacity: 0.8, fontSize: 13 }}>Total fuel</div>
-            <div style={{ fontWeight: 800, fontSize: 18 }}>{totals.fuel.toFixed(2)}</div>
-          </div>
-          <div style={{ padding: 12, border: "1px solid #f0f0f0", borderRadius: 12 }}>
-            <div style={{ opacity: 0.8, fontSize: 13 }}>Total spend</div>
-            <div style={{ fontWeight: 800, fontSize: 18 }}>
+      {error ? <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">{error}</div> : null}
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Total spend</CardTitle>
+            <CardDescription>Sum of all fill-ups</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">
               {(totals.cost / 100).toFixed(2)} {totals.currency}
             </div>
-          </div>
-        </div>
+            {loading ? <div className="mt-2 text-sm text-muted-foreground">Loading…</div> : null}
+          </CardContent>
+        </Card>
 
-        {error ? <p style={{ marginTop: 12, color: "#b00020" }}>{error}</p> : null}
-        {loading ? <p style={{ marginTop: 12 }}>Loading…</p> : null}
-      </section>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Total fuel</CardTitle>
+            <CardDescription>Sum of all liters</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{totals.fuel.toFixed(2)} L</div>
+            {loading ? <div className="mt-2 text-sm text-muted-foreground">Loading…</div> : null}
+          </CardContent>
+        </Card>
+      </div>
 
-      <section style={{ marginTop: 20 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700 }}>Monthly</h2>
-        {!loading && months.length === 0 ? <p style={{ opacity: 0.8 }}>No data yet.</p> : null}
-
+      <div className="grid gap-4 lg:grid-cols-2">
         <Bars title="Spend (last 12 months)" unit={totals.currency} data={spendBars} />
         <Bars title="Fuel (last 12 months)" unit="L" data={fuelBars} />
+      </div>
 
-        <div style={{ marginTop: 12, overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #eee" }}>Month</th>
-                <th style={{ textAlign: "right", padding: 8, borderBottom: "1px solid #eee" }}>Fuel</th>
-                <th style={{ textAlign: "right", padding: 8, borderBottom: "1px solid #eee" }}>Spend</th>
-              </tr>
-            </thead>
-            <tbody>
+      <Card>
+        <CardHeader>
+          <CardTitle>Monthly totals</CardTitle>
+          <CardDescription>{months.length ? "Per-month breakdown" : "No data yet"}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Month</TableHead>
+                <TableHead className="text-right">Fuel (L)</TableHead>
+                <TableHead className="text-right">Spend</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {months.map((m) => (
-                <tr key={m.month}>
-                  <td style={{ padding: 8, borderBottom: "1px solid #f4f4f4" }}>{m.month}</td>
-                  <td style={{ padding: 8, borderBottom: "1px solid #f4f4f4", textAlign: "right" }}>{m.fuelAmount.toFixed(2)}</td>
-                  <td style={{ padding: 8, borderBottom: "1px solid #f4f4f4", textAlign: "right" }}>
+                <TableRow key={m.month}>
+                  <TableCell className="font-medium">{m.month}</TableCell>
+                  <TableCell className="text-right">{m.fuelAmount.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">
                     {(m.totalCost / 100).toFixed(2)} {m.currency}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </main>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
