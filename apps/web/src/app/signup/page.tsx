@@ -1,6 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 type AccountType = "PERSONAL" | "COMPANY";
 
@@ -23,107 +30,94 @@ export default function SignupPage() {
   }, []);
 
   return (
-    <main style={{ maxWidth: 520, margin: "40px auto", padding: 24, fontFamily: "system-ui" }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800 }}>Create your FleetFuel account</h1>
-      <p style={{ marginTop: 8, opacity: 0.8 }}>
-        MVP signup. Already have an account? <a href="/login">Log in</a>.
-      </p>
+    <main className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-md items-center px-6 py-12">
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Create your FleetFuel account</CardTitle>
+          <CardDescription>
+            Already have an account?{" "}
+            <Link className="underline" href="/login">
+              Log in
+            </Link>
+            .
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error ? (
+            <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">
+              <b>Signup failed:</b> {error}
+            </div>
+          ) : null}
 
-      <form
-        style={{ marginTop: 24, display: "grid", gap: 14 }}
-        onSubmit={async (e) => {
-          e.preventDefault();
-          setError(null);
-          setSubmitting(true);
-          try {
-            const res = await fetch("/api/auth/signup", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email, password, accountType }),
-            });
-            const data = (await res.json()) as { error?: string };
-            if (!res.ok) {
-              setError(data.error ?? "Signup failed");
-              return;
-            }
-            window.location.href = "/app";
-          } catch {
-            setError("Network error");
-          } finally {
-            setSubmitting(false);
-          }
-        }}
-      >
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Email</span>
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            type="email"
-            autoComplete="email"
-            required
-            style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-          />
-        </label>
+          <form
+            className="grid gap-4"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setError(null);
+              setSubmitting(true);
+              try {
+                const res = await fetch("/api/auth/signup", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email, password, accountType }),
+                });
+                const data = (await res.json()) as { error?: string };
+                if (!res.ok) {
+                  setError(data.error ?? "Signup failed");
+                  return;
+                }
+                window.location.href = "/app";
+              } catch {
+                setError("Network error");
+              } finally {
+                setSubmitting(false);
+              }
+            }}
+          >
+            <div className="grid gap-2">
+              <Label>Email</Label>
+              <Input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                type="email"
+                autoComplete="email"
+                required
+              />
+            </div>
 
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Password</span>
-          <input
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="min 12 characters"
-            type="password"
-            autoComplete="new-password"
-            required
-            style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-          />
-        </label>
+            <div className="grid gap-2">
+              <Label>Password</Label>
+              <Input
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="min 12 characters"
+                type="password"
+                autoComplete="new-password"
+                required
+              />
+            </div>
 
-        <fieldset style={{ border: "1px solid #eee", borderRadius: 8, padding: 12 }}>
-          <legend style={{ padding: "0 6px" }}>Account type</legend>
-          <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
-            <input
-              type="radio"
-              name="accountType"
-              checked={accountType === "PERSONAL"}
-              onChange={() => setAccountType("PERSONAL")}
-            />
-            Personal
-          </label>
-          <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
-            <input
-              type="radio"
-              name="accountType"
-              checked={accountType === "COMPANY"}
-              onChange={() => setAccountType("COMPANY")}
-            />
-            Company
-          </label>
-        </fieldset>
+            <div className="grid gap-2">
+              <Label>Account type</Label>
+              <RadioGroup value={accountType} onValueChange={(v) => setAccountType(v as AccountType)}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="PERSONAL" id="personal" />
+                  <Label htmlFor="personal">Personal</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="COMPANY" id="company" />
+                  <Label htmlFor="company">Company</Label>
+                </div>
+              </RadioGroup>
+            </div>
 
-        {error ? (
-          <div style={{ background: "#ffe9e9", border: "1px solid #ffb3b3", padding: 10, borderRadius: 8 }}>
-            <b>Signup failed:</b> {error}
-          </div>
-        ) : null}
-
-        <button
-          type="submit"
-          disabled={submitting}
-          style={{
-            padding: 12,
-            borderRadius: 8,
-            border: 0,
-            background: "#111",
-            color: "white",
-            opacity: submitting ? 0.7 : 1,
-            cursor: submitting ? "wait" : "pointer",
-          }}
-        >
-          {submitting ? "Creating…" : "Create account"}
-        </button>
-      </form>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Creating…" : "Create account"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </main>
   );
 }
