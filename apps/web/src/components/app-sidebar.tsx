@@ -1,0 +1,65 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
+
+const nav = [
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/vehicles", label: "Vehicles" },
+  { href: "/fillups", label: "Fill-ups" },
+  { href: "/trips", label: "Trips" },
+  { href: "/drivers", label: "Drivers" },
+  { href: "/profile", label: "Profile" },
+];
+
+export function AppSidebar() {
+  const pathname = usePathname();
+
+  return (
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <div className="px-2 py-1">
+          <div className="text-sm font-semibold">FleetFuel</div>
+          <div className="text-xs text-muted-foreground">Local-first MVP</div>
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>App</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {nav.map((n) => {
+                const active = pathname === n.href || pathname?.startsWith(`${n.href}/`);
+                return (
+                  <SidebarMenuItem key={n.href}>
+                    <SidebarMenuButton asChild isActive={active}>
+                      <Link href={n.href}>{n.label}</Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <div className="px-2 py-2 text-xs text-muted-foreground">© FleetFuel</div>
+      </SidebarFooter>
+    </Sidebar>
+  );
+}
