@@ -4,6 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import {
+  Car,
+  ClipboardList,
+  Fuel,
+  LayoutDashboard,
+  Users,
+  User,
+} from "lucide-react";
+
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -17,12 +26,12 @@ import {
 } from "@/components/ui/sidebar";
 
 const nav = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/vehicles", label: "Vehicles" },
-  { href: "/fillups", label: "Fill-ups" },
-  { href: "/trips", label: "Trips" },
-  { href: "/drivers", label: "Drivers" },
-  { href: "/profile", label: "Profile" },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/vehicles", label: "Vehicles", icon: Car },
+  { href: "/fillups", label: "Fill-ups", icon: Fuel },
+  { href: "/trips", label: "Trips", icon: ClipboardList },
+  { href: "/drivers", label: "Drivers", icon: Users },
+  { href: "/profile", label: "Profile", icon: User },
 ];
 
 export function AppSidebar() {
@@ -44,10 +53,14 @@ export function AppSidebar() {
             <SidebarMenu>
               {nav.map((n) => {
                 const active = pathname === n.href || pathname?.startsWith(`${n.href}/`);
+                const Icon = n.icon;
                 return (
                   <SidebarMenuItem key={n.href}>
-                    <SidebarMenuButton asChild isActive={active}>
-                      <Link href={n.href}>{n.label}</Link>
+                    <SidebarMenuButton asChild isActive={active} tooltip={n.label}>
+                      <Link href={n.href}>
+                        <Icon />
+                        <span>{n.label}</span>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
