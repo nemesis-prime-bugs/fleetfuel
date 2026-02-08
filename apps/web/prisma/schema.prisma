@@ -28,6 +28,12 @@ enum UnitSystem {
   IMPERIAL
 }
 
+enum ThemePreference {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -37,9 +43,26 @@ model User {
   updatedAt    DateTime @updatedAt
 
   account      Account?
+  profile      Profile?
   vehicles     Vehicle[]
   sessions     Session[]
   drivers      Driver[]
+}
+
+model Profile {
+  id              String           @id @default(cuid())
+  userId          String           @unique
+  firstName       String?
+  lastName        String?
+  company         String?
+  age             Int?
+  gender          String?
+  phone           String?
+  themePreference ThemePreference  @default(SYSTEM)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Session {

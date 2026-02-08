@@ -58,6 +58,11 @@ export async function POST(req: Request) {
               type: input.accountType,
             },
           },
+          profile: {
+            create: {
+              themePreference: "SYSTEM",
+            },
+          },
         },
         select: { id: true, email: true },
       });
