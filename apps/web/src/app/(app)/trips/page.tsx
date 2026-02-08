@@ -2,6 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+
 type Vehicle = {
   id: string;
   name: string;
@@ -45,16 +52,9 @@ export default function TripsPage() {
 
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const [startedAt, setStartedAt] = useState(() => {
-    const now = new Date();
-    return toLocalInputValue(now.toISOString());
-  });
-  const [endedAt, setEndedAt] = useState(() => {
-    const later = new Date(Date.now() + 60 * 60 * 1000);
-    return toLocalInputValue(later.toISOString());
-  });
+  const [startedAt, setStartedAt] = useState(() => toLocalInputValue(new Date().toISOString()));
+  const [endedAt, setEndedAt] = useState(() => toLocalInputValue(new Date(Date.now() + 60 * 60 * 1000).toISOString()));
   const [odometerStart, setOdometerStart] = useState("");
   const [odometerEnd, setOdometerEnd] = useState("");
   const [notes, setNotes] = useState("");
@@ -98,7 +98,6 @@ export default function TripsPage() {
 
   async function refreshTrips(vId: string) {
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch(`/api/trips?vehicleId=${encodeURIComponent(vId)}`);
       if (res.status === 401) {
@@ -109,7 +108,7 @@ export default function TripsPage() {
       if (!res.ok) throw new Error(data.error ?? "Failed to load trips");
       setTrips(data.trips ?? []);
     } catch (e) {
-      setError((e as Error).message);
+      toast.error((e as Error).message);
     } finally {
       setLoading(false);
     }
@@ -137,7 +136,7 @@ export default function TripsPage() {
     };
 
     type DayGroup = {
-      day: string; // YYYY-MM-DD local
+      day: string;
       totalKm: number;
       byDriver: Array<{ driverId: string; driverName: string; totalKm: number; trips: Trip[] }>;
     };
@@ -168,204 +167,163 @@ export default function TripsPage() {
   }, [trips]);
 
   return (
-    <main style={{ maxWidth: 1000, margin: "40px auto", padding: 24, fontFamily: "system-ui" }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800 }}>Trips (Tagebuch)</h1>
+    <div className="mx-auto w-full max-w-6xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Trips (Tagebuch)</h1>
+        <p className="text-muted-foreground">Daily logbook entries grouped by day and driver.</p>
+      </div>
 
-      <section style={{ marginTop: 16, display: "flex", gap: 12, alignItems: "center" }}>
-        <a href="/drivers" style={{ opacity: 0.9 }}>
-          Manage drivers
-        </a>
-        <a href="/vehicles" style={{ opacity: 0.9 }}>
-          Vehicles
-        </a>
-        <a href="/fillups" style={{ opacity: 0.9 }}>
-          Fill-ups
-        </a>
-      </section>
-
-      <section style={{ marginTop: 16, display: "flex", gap: 12, alignItems: "center" }}>
-        <label>
-          Vehicle:&nbsp;
-          <select
-            value={vehicleId}
-            onChange={(e) => setVehicleId(e.target.value)}
-            style={{ padding: 8, borderRadius: 8, border: "1px solid #ccc" }}
-          >
-            {vehicles.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Driver:&nbsp;
-          <select
-            value={driverId}
-            onChange={(e) => setDriverId(e.target.value)}
-            style={{ padding: 8, borderRadius: 8, border: "1px solid #ccc" }}
-          >
-            {drivers.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {drivers.length === 0 ? <span style={{ opacity: 0.8 }}>No drivers yet — add one first.</span> : null}
-      </section>
-
-      <section style={{ marginTop: 20, padding: 16, border: "1px solid #eee", borderRadius: 12 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700 }}>Add trip entry</h2>
-
-        <form
-          style={{ display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr 1fr 1fr", marginTop: 12 }}
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (!canSubmit) return;
-            setError(null);
-            try {
-              const res = await fetch("/api/trips", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  vehicleId,
-                  driverId,
-                  startedAt: fromLocalInputValue(startedAt),
-                  endedAt: fromLocalInputValue(endedAt),
-                  odometerStart: Number(odometerStart),
-                  odometerEnd: Number(odometerEnd),
-                  notes,
-                }),
-              });
-              const data = (await res.json()) as { error?: string };
-              if (!res.ok) throw new Error(data.error ?? "Create failed");
-              setOdometerStart("");
-              setOdometerEnd("");
-              setNotes("");
-              await refreshTrips(vehicleId);
-            } catch (e2) {
-              setError((e2 as Error).message);
-            }
-          }}
-        >
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>Start</span>
-            <input
-              type="datetime-local"
-              value={startedAt}
-              onChange={(e) => setStartedAt(e.target.value)}
-              required
-              style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-            />
-          </label>
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>End</span>
-            <input
-              type="datetime-local"
-              value={endedAt}
-              onChange={(e) => setEndedAt(e.target.value)}
-              required
-              style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-            />
-          </label>
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>Odometer start</span>
-            <input
-              value={odometerStart}
-              onChange={(e) => setOdometerStart(e.target.value)}
-              inputMode="numeric"
-              placeholder="e.g. 120000"
-              required
-              style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-            />
-          </label>
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>Odometer end</span>
-            <input
-              value={odometerEnd}
-              onChange={(e) => setOdometerEnd(e.target.value)}
-              inputMode="numeric"
-              placeholder="e.g. 120400"
-              required
-              style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-            />
-          </label>
-
-          <label style={{ display: "grid", gap: 6, gridColumn: "1 / span 4" }}>
-            <span>Notes (optional)</span>
-            <input
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. customer visit"
-              style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-            />
-          </label>
-
-          <div style={{ gridColumn: "1 / span 4", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ opacity: 0.8, fontSize: 13 }}>
-              Distance: {distancePreview === null ? "—" : `${distancePreview} km`}
-            </div>
-            <button
-              type="submit"
-              disabled={!canSubmit || drivers.length === 0}
-              style={{
-                padding: 12,
-                borderRadius: 8,
-                border: 0,
-                background: "#111",
-                color: "white",
-                opacity: canSubmit && drivers.length ? 1 : 0.6,
-              }}
-            >
-              Add
-            </button>
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="grid gap-2">
+            <Label>Vehicle</Label>
+            <Select value={vehicleId} onValueChange={setVehicleId}>
+              <SelectTrigger className="w-[260px]">
+                <SelectValue placeholder="Select vehicle" />
+              </SelectTrigger>
+              <SelectContent>
+                {vehicles.map((v) => (
+                  <SelectItem key={v.id} value={v.id}>
+                    {v.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        </form>
 
-        {error ? <p style={{ marginTop: 12, color: "#b00020" }}>{error}</p> : null}
-      </section>
+          <div className="grid gap-2">
+            <Label>Driver</Label>
+            <Select value={driverId} onValueChange={setDriverId}>
+              <SelectTrigger className="w-[260px]">
+                <SelectValue placeholder="Select driver" />
+              </SelectTrigger>
+              <SelectContent>
+                {drivers.map((d) => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
-      <section style={{ marginTop: 20 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700 }}>History (grouped by day)</h2>
-        {loading ? <p>Loading…</p> : null}
-        {!loading && trips.length === 0 ? <p style={{ opacity: 0.8 }}>No trips yet.</p> : null}
+        <Button asChild variant="secondary">
+          <a href="/drivers">Manage drivers</a>
+        </Button>
+      </div>
 
-        <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
-          {grouped.map((g) => (
-            <div key={g.day} style={{ padding: 12, border: "1px solid #eee", borderRadius: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
-                <div style={{ fontWeight: 800 }}>{new Date(`${g.day}T00:00:00`).toLocaleDateString()}</div>
-                <div style={{ opacity: 0.8, fontSize: 13 }}>Total: {g.totalKm} km</div>
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Add trip entry</CardTitle>
+          <CardDescription>Time-based + odometer start/end. Distance is derived.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            className="grid gap-4 md:grid-cols-4"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (!canSubmit) return;
+              try {
+                const res = await fetch("/api/trips", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    vehicleId,
+                    driverId,
+                    startedAt: fromLocalInputValue(startedAt),
+                    endedAt: fromLocalInputValue(endedAt),
+                    odometerStart: Number(odometerStart),
+                    odometerEnd: Number(odometerEnd),
+                    notes,
+                  }),
+                });
+                const data = (await res.json()) as { error?: string };
+                if (!res.ok) throw new Error(data.error ?? "Create failed");
+                setOdometerStart("");
+                setOdometerEnd("");
+                setNotes("");
+                toast.success("Trip added");
+                await refreshTrips(vehicleId);
+              } catch (e2) {
+                toast.error((e2 as Error).message);
+              }
+            }}
+          >
+            <div className="grid gap-2">
+              <Label>Start</Label>
+              <Input type="datetime-local" value={startedAt} onChange={(e) => setStartedAt(e.target.value)} required />
+            </div>
+            <div className="grid gap-2">
+              <Label>End</Label>
+              <Input type="datetime-local" value={endedAt} onChange={(e) => setEndedAt(e.target.value)} required />
+            </div>
+            <div className="grid gap-2">
+              <Label>Odometer start</Label>
+              <Input value={odometerStart} onChange={(e) => setOdometerStart(e.target.value)} inputMode="numeric" required />
+            </div>
+            <div className="grid gap-2">
+              <Label>Odometer end</Label>
+              <Input value={odometerEnd} onChange={(e) => setOdometerEnd(e.target.value)} inputMode="numeric" required />
+            </div>
 
-              <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
-                {g.byDriver.map((d) => (
-                  <div key={d.driverId} style={{ padding: 10, border: "1px solid #f0f0f0", borderRadius: 10 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                      <div style={{ fontWeight: 700 }}>{d.driverName}</div>
-                      <div style={{ opacity: 0.8, fontSize: 13 }}>{d.totalKm} km</div>
-                    </div>
+            <div className="grid gap-2 md:col-span-4">
+              <Label>Notes (optional)</Label>
+              <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. customer visit" />
+            </div>
 
-                    <div style={{ marginTop: 8, display: "grid", gap: 8 }}>
-                      {d.trips.map((t) => (
-                        <div key={t.id} style={{ padding: 10, border: "1px solid #eee", borderRadius: 10 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+            <div className="md:col-span-4 flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">Distance: {distancePreview === null ? "—" : `${distancePreview} km`}</div>
+              <Button type="submit" disabled={!canSubmit || drivers.length === 0}>
+                Add
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>History (grouped by day)</CardTitle>
+          <CardDescription>Totals per day and per driver.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
+          {!loading && trips.length === 0 ? <p className="text-sm text-muted-foreground">No trips yet.</p> : null}
+
+          <div className="space-y-4">
+            {grouped.map((g) => (
+              <Card key={g.day}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-baseline justify-between">
+                    <CardTitle className="text-base">{new Date(`${g.day}T00:00:00`).toLocaleDateString()}</CardTitle>
+                    <div className="text-sm text-muted-foreground">Total: {g.totalKm} km</div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {g.byDriver.map((d) => (
+                    <Card key={d.driverId}>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-baseline justify-between">
+                          <CardTitle className="text-sm">{d.driverName}</CardTitle>
+                          <div className="text-sm text-muted-foreground">{d.totalKm} km</div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        {d.trips.map((t) => (
+                          <div key={t.id} className="flex flex-col gap-2 rounded-md border p-3 md:flex-row md:items-center md:justify-between">
                             <div>
-                              <div style={{ fontWeight: 700 }}>{t.distance} km</div>
-                              <div style={{ opacity: 0.8, fontSize: 13 }}>
-                                {new Date(t.startedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} → {new Date(t.endedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                                {" "}· Odo {t.odometerStart} → {t.odometerEnd}
+                              <div className="font-medium">{t.distance} km</div>
+                              <div className="text-sm text-muted-foreground">
+                                {new Date(t.startedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} → {new Date(t.endedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · Odo {t.odometerStart} → {t.odometerEnd}
                               </div>
-                              {t.notes ? <div style={{ marginTop: 6, fontSize: 13 }}>{t.notes}</div> : null}
+                              {t.notes ? <div className="mt-1 text-sm">{t.notes}</div> : null}
                             </div>
 
-                            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                              <button
-                                type="button"
-                                style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ddd", background: "white" }}
+                            <div className="flex gap-2">
+                              <Button
+                                variant="secondary"
+                                size="sm"
                                 onClick={async () => {
                                   const newStart = window.prompt("New start (YYYY-MM-DDTHH:MM)", toLocalInputValue(t.startedAt));
                                   if (!newStart) return;
@@ -375,7 +333,6 @@ export default function TripsPage() {
                                   if (!newOdoStart) return;
                                   const newOdoEnd = window.prompt("New odometer end", String(t.odometerEnd));
                                   if (!newOdoEnd) return;
-                                  setError(null);
                                   try {
                                     const res = await fetch(`/api/trips/${t.id}`, {
                                       method: "PATCH",
@@ -389,49 +346,45 @@ export default function TripsPage() {
                                     });
                                     const data = (await res.json()) as { error?: string };
                                     if (!res.ok) throw new Error(data.error ?? "Update failed");
+                                    toast.success("Trip updated");
                                     await refreshTrips(vehicleId);
                                   } catch (e) {
-                                    setError((e as Error).message);
+                                    toast.error((e as Error).message);
                                   }
                                 }}
                               >
                                 Edit
-                              </button>
-                              <button
-                                type="button"
-                                style={{
-                                  padding: "6px 10px",
-                                  borderRadius: 8,
-                                  border: "1px solid #ffb3b3",
-                                  background: "#ffe9e9",
-                                }}
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
                                 onClick={async () => {
                                   if (!window.confirm("Delete this trip?")) return;
-                                  setError(null);
                                   try {
                                     const res = await fetch(`/api/trips/${t.id}`, { method: "DELETE" });
                                     const data = (await res.json()) as { error?: string };
                                     if (!res.ok) throw new Error(data.error ?? "Delete failed");
+                                    toast.success("Trip deleted");
                                     await refreshTrips(vehicleId);
                                   } catch (e) {
-                                    setError((e as Error).message);
+                                    toast.error((e as Error).message);
                                   }
                                 }}
                               >
                                 Delete
-                              </button>
+                              </Button>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    </main>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
