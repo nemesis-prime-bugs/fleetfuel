@@ -14,6 +14,59 @@ type MonthRow = {
   currency: string;
 };
 
+type BarDatum = {
+  label: string;
+  value: number;
+};
+
+function Bars({ title, unit, data }: { title: string; unit: string; data: BarDatum[] }) {
+  const max = Math.max(0, ...data.map((d) => d.value));
+  const width = 920;
+  const height = 220;
+  const padX = 20;
+  const padTop = 20;
+  const padBottom = 40;
+  const innerW = width - padX * 2;
+  const innerH = height - padTop - padBottom;
+
+  const barGap = 8;
+  const barW = data.length ? Math.max(6, Math.floor((innerW - barGap * (data.length - 1)) / data.length)) : 0;
+
+  return (
+    <div style={{ marginTop: 16, padding: 16, border: "1px solid #eee", borderRadius: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>{title}</h3>
+        <div style={{ opacity: 0.75, fontSize: 13 }}>{unit}</div>
+      </div>
+
+      {data.length === 0 ? (
+        <p style={{ opacity: 0.8, marginTop: 10 }}>No data.</p>
+      ) : (
+        <svg viewBox={`0 0 ${width} ${height}`} style={{ width: "100%", height: "auto", marginTop: 10 }}>
+          <rect x={0} y={0} width={width} height={height} fill="white" />
+
+          {/* baseline */}
+          <line x1={padX} y1={padTop + innerH} x2={padX + innerW} y2={padTop + innerH} stroke="#ddd" />
+
+          {data.map((d, i) => {
+            const h = max > 0 ? (d.value / max) * innerH : 0;
+            const x = padX + i * (barW + barGap);
+            const y = padTop + (innerH - h);
+            return (
+              <g key={d.label}>
+                <rect x={x} y={y} width={barW} height={h} rx={4} fill="#111" opacity={0.85} />
+                <text x={x + barW / 2} y={padTop + innerH + 18} textAnchor="middle" fontSize={12} fill="#555">
+                  {d.label}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [vehicleId, setVehicleId] = useState<string>("");
@@ -26,6 +79,23 @@ export default function DashboardPage() {
     const cost = months.reduce((sum, m) => sum + m.totalCost, 0);
     const currency = months[0]?.currency ?? "EUR";
     return { fuel, cost, currency };
+  }, [months]);
+
+  const spendBars = useMemo<BarDatum[]>(() => {
+    // keep last 12 months to avoid overcrowding
+    const last = months.slice(-12);
+    return last.map((m) => ({
+      label: m.month.slice(5), // MM
+      value: Math.round(m.totalCost / 100), // EUR
+    }));
+  }, [months]);
+
+  const fuelBars = useMemo<BarDatum[]>(() => {
+    const last = months.slice(-12);
+    return last.map((m) => ({
+      label: m.month.slice(5),
+      value: Math.round(m.fuelAmount * 100) / 100,
+    }));
   }, [months]);
 
   async function loadVehicles() {
@@ -126,6 +196,9 @@ export default function DashboardPage() {
       <section style={{ marginTop: 20 }}>
         <h2 style={{ fontSize: 18, fontWeight: 700 }}>Monthly</h2>
         {!loading && months.length === 0 ? <p style={{ opacity: 0.8 }}>No data yet.</p> : null}
+
+        <Bars title="Spend (last 12 months)" unit={totals.currency} data={spendBars} />
+        <Bars title="Fuel (last 12 months)" unit="L" data={fuelBars} />
 
         <div style={{ marginTop: 12, overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
