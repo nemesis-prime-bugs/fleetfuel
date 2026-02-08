@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "test:password": "tsx scripts/password-selftest.ts",
-    "test:sessiontoken": "tsx scripts/sessiontoken-selftest.ts"
+    "test:sessiontoken": "tsx scripts/sessiontoken-selftest.ts",
+    "test:consumption": "tsx scripts/consumption-selftest.ts"
   },
   "dependencies": {
     "@prisma/client": "6.19.2",
