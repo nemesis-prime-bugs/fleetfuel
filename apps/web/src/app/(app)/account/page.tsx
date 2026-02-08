@@ -2,6 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+
 type AccountType = "PERSONAL" | "COMPANY";
 
 type Account = {
@@ -16,7 +23,6 @@ export default function AccountPage() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const canSave = useMemo(() => {
     if (!account) return false;
@@ -27,7 +33,6 @@ export default function AccountPage() {
 
   async function load() {
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch("/api/account");
       if (res.status === 401) {
@@ -41,7 +46,7 @@ export default function AccountPage() {
       setType(a.type);
       setName(a.name ?? "");
     } catch (e) {
-      setError((e as Error).message);
+      toast.error((e as Error).message);
     } finally {
       setLoading(false);
     }
@@ -54,102 +59,90 @@ export default function AccountPage() {
   }, []);
 
   return (
-    <main style={{ maxWidth: 900, margin: "40px auto", padding: 24, fontFamily: "system-ui" }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800 }}>Account</h1>
-      <p style={{ opacity: 0.8, marginTop: 8 }}>Basic account settings for MVP.</p>
+    <div className="mx-auto w-full max-w-4xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Account</h1>
+        <p className="text-muted-foreground">Account type and name (billing identity later).</p>
+      </div>
 
-      <section style={{ marginTop: 16, display: "flex", gap: 12, alignItems: "center" }}>
-        <a href="/dashboard" style={{ opacity: 0.9 }}>
-          Dashboard
-        </a>
-        <a href="/vehicles" style={{ opacity: 0.9 }}>
-          Vehicles
-        </a>
-        <a href="/fillups" style={{ opacity: 0.9 }}>
-          Fill-ups
-        </a>
-        <a href="/trips" style={{ opacity: 0.9 }}>
-          Trips
-        </a>
-      </section>
+      <div className="flex flex-wrap gap-2">
+        <Button asChild variant="secondary">
+          <a href="/dashboard">Dashboard</a>
+        </Button>
+        <Button asChild variant="secondary">
+          <a href="/profile">Profile</a>
+        </Button>
+      </div>
 
-      <section style={{ marginTop: 20, padding: 16, border: "1px solid #eee", borderRadius: 12 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700 }}>Settings</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>Settings</CardTitle>
+          <CardDescription>Basic account settings for MVP.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
 
-        {loading ? <p style={{ marginTop: 12 }}>Loading…</p> : null}
-        {error ? <p style={{ marginTop: 12, color: "#b00020" }}>{error}</p> : null}
+          {!loading && account ? (
+            <form
+              className="mt-4 grid gap-4 md:grid-cols-2"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!canSave) return;
+                setSaving(true);
+                try {
+                  const res = await fetch("/api/account", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      type,
+                      name: name.trim() ? name.trim() : null,
+                    }),
+                  });
+                  const data = (await res.json()) as { account?: Account; error?: string };
+                  if (!res.ok) throw new Error(data.error ?? "Save failed");
+                  const updated = data.account!;
+                  setAccount(updated);
+                  setType(updated.type);
+                  setName(updated.name ?? "");
+                  toast.success("Account updated");
+                } catch (e2) {
+                  toast.error((e2 as Error).message);
+                } finally {
+                  setSaving(false);
+                }
+              }}
+            >
+              <div className="grid gap-2">
+                <Label>Account type</Label>
+                <Select value={type} onValueChange={(v) => setType(v as AccountType)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PERSONAL">Personal</SelectItem>
+                    <SelectItem value="COMPANY">Company</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-        {!loading && account ? (
-          <form
-            style={{ marginTop: 12, display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr" }}
-            onSubmit={async (e) => {
-              e.preventDefault();
-              if (!canSave) return;
-              setSaving(true);
-              setError(null);
-              try {
-                const res = await fetch("/api/account", {
-                  method: "PATCH",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    type,
-                    name: name.trim() ? name.trim() : null,
-                  }),
-                });
-                const data = (await res.json()) as { account?: Account; error?: string };
-                if (!res.ok) throw new Error(data.error ?? "Save failed");
-                const updated = data.account!;
-                setAccount(updated);
-                setType(updated.type);
-                setName(updated.name ?? "");
-              } catch (e2) {
-                setError((e2 as Error).message);
-              } finally {
-                setSaving(false);
-              }
-            }}
-          >
-            <label style={{ display: "grid", gap: 6 }}>
-              <span>Account type</span>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value as AccountType)}
-                style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-              >
-                <option value="PERSONAL">Personal</option>
-                <option value="COMPANY">Company</option>
-              </select>
-            </label>
+              <div className="grid gap-2">
+                <Label>Name (optional)</Label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={type === "COMPANY" ? "Company name" : "Your name"}
+                />
+              </div>
 
-            <label style={{ display: "grid", gap: 6 }}>
-              <span>Name (optional)</span>
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={type === "COMPANY" ? "Company name" : "Your name"}
-                style={{ padding: 10, borderRadius: 8, border: "1px solid #ccc" }}
-              />
-            </label>
-
-            <div style={{ gridColumn: "1 / span 2", display: "flex", justifyContent: "flex-end" }}>
-              <button
-                type="submit"
-                disabled={!canSave || saving}
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: 8,
-                  border: 0,
-                  background: "#111",
-                  color: "#fff",
-                  opacity: canSave && !saving ? 1 : 0.6,
-                }}
-              >
-                {saving ? "Saving…" : "Save"}
-              </button>
-            </div>
-          </form>
-        ) : null}
-      </section>
-    </main>
+              <div className="md:col-span-2 flex justify-end">
+                <Button type="submit" disabled={!canSave || saving}>
+                  {saving ? "Saving…" : "Save"}
+                </Button>
+              </div>
+            </form>
+          ) : null}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
