@@ -8,7 +8,11 @@ export async function POST() {
 
   if (rawToken) {
     // Best-effort invalidation.
-    await deleteSessionByRawToken(rawToken);
+    try {
+      await deleteSessionByRawToken(rawToken);
+    } catch {
+      // ignore
+    }
   }
 
   await clearSessionCookie();
