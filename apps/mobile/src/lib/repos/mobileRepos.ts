@@ -21,15 +21,17 @@ async function jsonOrThrow<T>(res: Response): Promise<T> {
   return data as T;
 }
 
-function createServerFetch(baseUrl: string) {
+function createServerFetch(baseUrl: string, opts?: { bearerToken?: string | null }) {
   const trimmed = baseUrl.replace(/\/+$/, "");
   return async function serverFetch(path: string, init?: RequestInit) {
     const url = `${trimmed}${path.startsWith("/") ? path : `/${path}`}`;
+
+    const headers = new Headers(init?.headers);
+    if (opts?.bearerToken) headers.set("Authorization", `Bearer ${opts.bearerToken}`);
+
     return fetch(url, {
       ...init,
-      // In Capacitor WebView, cookies typically work when talking to same-origin.
-      // For cross-origin during dev, this may require additional CORS + cookie settings.
-      credentials: "include",
+      headers,
     });
   };
 }
@@ -40,7 +42,7 @@ import { createReceiptRepoLocal } from "./local/receiptRepoLocal";
 import { createTripRepoSqlite } from "./local/tripRepoSqlite";
 import { createVehicleRepoSqlite } from "./local/vehicleRepoSqlite";
 
-export function createMobileRepos(opts: { mode: StorageMode; baseUrl?: string }): FleetFuelRepos {
+export function createMobileRepos(opts: { mode: StorageMode; baseUrl?: string; bearerToken?: string | null }): FleetFuelRepos {
   if (opts.mode === "local") {
     const notImplemented = (name: string) => async () => {
       throw new Error(`${name} not implemented for local mode yet (see MOB-4/MOB-5)`);
@@ -66,7 +68,7 @@ export function createMobileRepos(opts: { mode: StorageMode; baseUrl?: string })
 
   if (!opts.baseUrl) throw new Error("baseUrl is required for server mode");
 
-  const serverFetch = createServerFetch(opts.baseUrl);
+  const serverFetch = createServerFetch(opts.baseUrl, { bearerToken: opts.bearerToken });
 
   const vehicles: VehicleRepo = {
     async list() {

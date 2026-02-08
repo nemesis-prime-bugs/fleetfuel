@@ -1,10 +1,20 @@
+import { headers } from "next/headers";
+
 import { prisma } from "@/lib/db";
 
 import { getSessionByRawToken } from "./sessionRepo";
 import { getSessionCookie } from "./sessionCookie";
 
+async function getBearerTokenFromHeaders(): Promise<string | null> {
+  const h = await headers();
+  const auth = h.get("authorization") ?? h.get("Authorization");
+  if (!auth) return null;
+  const m = auth.match(/^Bearer\s+(.+)$/i);
+  return m?.[1]?.trim() || null;
+}
+
 export async function getCurrentUser() {
-  const rawToken = await getSessionCookie();
+  const rawToken = (await getSessionCookie()) ?? (await getBearerTokenFromHeaders());
   if (!rawToken) return null;
 
   const session = await getSessionByRawToken(rawToken);

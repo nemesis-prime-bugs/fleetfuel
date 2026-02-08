@@ -26,6 +26,9 @@ importers:
       '@capacitor/ios':
         specifier: 7.4.3
         version: 7.4.3(@capacitor/core@7.4.3)
+      '@capacitor/preferences':
+        specifier: 7.0.3
+        version: 7.0.3(@capacitor/core@7.4.3)
       '@fleetfuel/shared':
         specifier: workspace:^
         version: link:../../packages/shared
@@ -385,6 +388,11 @@ packages:
     resolution: {integrity: sha512-VNm7cHODgh3KK/4ZC2rXU9gBlvHii/mYFLI+XMXwq24nhB679QxHhz+pUuI7PatYoM2q4MAL0NR/dRgehKCaSA==}
     peerDependencies:
       '@capacitor/core': ^7.4.0
+
+  '@capacitor/preferences@7.0.3':
+    resolution: {integrity: sha512-s8u2PCnxCj6auvZZaFb//KJSyvgwwtKu6aFA7PQ1FQULhZw+3zCb78biyWcl71KF0iBuC2jYlj4PjTeaF5OIGQ==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
 
   '@capacitor/synapse@1.0.4':
     resolution: {integrity: sha512-/C1FUo8/OkKuAT4nCIu/34ny9siNHr9qtFezu4kxm6GY1wNFxrCFWjfYx5C1tUhVGz3fxBABegupkpjXvjCHrw==}
@@ -4604,6 +4612,10 @@ snapshots:
       '@capacitor/synapse': 1.0.4
 
   '@capacitor/ios@7.4.3(@capacitor/core@7.4.3)':
+    dependencies:
+      '@capacitor/core': 7.4.3
+
+  '@capacitor/preferences@7.0.3(@capacitor/core@7.4.3)':
     dependencies:
       '@capacitor/core': 7.4.3
 

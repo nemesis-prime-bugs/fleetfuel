@@ -19,6 +19,7 @@
     "@capacitor/core": "7.4.3",
     "@capacitor/filesystem": "7.1.4",
     "@capacitor/ios": "7.4.3",
+    "@capacitor/preferences": "7.0.3",
     "@fleetfuel/shared": "workspace:^",
     "jeep-sqlite": "2.8.0",
     "react": "^18.3.1",

@@ -12,6 +12,17 @@ Format:
 
 ## Entries
 
+### 2026-02-08 (UTC) — Mobile server-mode token storage dependency
+- Operator/machine: nemesis-prime@NemesisPrimeBot
+- Repo: FleetFuel (`projects/fleetfuel`)
+- Intent: store server-mode auth token locally on-device (MOB-6).
+- Registry: https://registry.npmjs.org/
+- Commands:
+  - `cd apps/mobile`
+  - `corepack pnpm@10.6.1 add @capacitor/preferences@7.0.3`
+- Notes:
+  - For MVP we store the bearer session token here; later replace with secure-storage.
+
 ### 2026-02-08 (UTC) — Mobile local persistence dependencies (SQLite)
 - Operator/machine: nemesis-prime@NemesisPrimeBot
 - Repo: FleetFuel (`projects/fleetfuel`)
@@ -35,6 +46,7 @@ Format:
   - `corepack pnpm@10.6.1 add @capacitor/filesystem@7.1.4`
 - Notes:
   - Used to store receipt images locally on-device.
+
 
 
 ### 2026-02-07 (UTC) — Add Prisma (DB ORM) for local SQLite persistence
