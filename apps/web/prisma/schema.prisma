@@ -78,6 +78,7 @@ model Vehicle {
   trips   Trip[]
 
   @@index([userId])
+  @@unique([userId, name])
 }
 
 model Driver {

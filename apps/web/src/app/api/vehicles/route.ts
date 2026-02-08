@@ -34,6 +34,7 @@ export async function POST(req: Request) {
 
   const name = (body.name ?? "").trim();
   if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
+  if (name.length > 64) return NextResponse.json({ error: "Name too long" }, { status: 400 });
 
   const fuelType = body.fuelType;
   if (!fuelType) return NextResponse.json({ error: "Fuel type is required" }, { status: 400 });
