@@ -10,6 +10,12 @@ type Vehicle = {
   createdAt: string;
 };
 
+type VehiclePatch = {
+  name?: string;
+  fuelType?: Vehicle["fuelType"];
+  unitSystem?: Vehicle["unitSystem"];
+};
+
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +48,22 @@ export default function VehiclesPage() {
   useEffect(() => {
     refresh();
   }, []);
+
+  async function patchVehicle(id: string, patch: VehiclePatch) {
+    const res = await fetch(`/api/vehicles/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    const data = (await res.json()) as { error?: string };
+    if (!res.ok) throw new Error(data.error ?? "Update failed");
+  }
+
+  async function deleteVehicle(id: string) {
+    const res = await fetch(`/api/vehicles/${id}`, { method: "DELETE" });
+    const data = (await res.json()) as { error?: string };
+    if (!res.ok) throw new Error(data.error ?? "Delete failed");
+  }
 
   return (
     <main style={{ maxWidth: 900, margin: "40px auto", padding: 24, fontFamily: "system-ui" }}>
@@ -132,7 +154,45 @@ export default function VehiclesPage() {
                     {v.fuelType} · {v.unitSystem}
                   </div>
                 </div>
-                <div style={{ opacity: 0.6, fontSize: 12, alignSelf: "center" }}>{v.id}</div>
+
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <button
+                    type="button"
+                    style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ddd", background: "white" }}
+                    onClick={async () => {
+                      const newName = window.prompt("New vehicle name", v.name);
+                      if (!newName) return;
+                      try {
+                        await patchVehicle(v.id, { name: newName });
+                        await refresh();
+                      } catch (e) {
+                        setError((e as Error).message);
+                      }
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 8,
+                      border: "1px solid #ffb3b3",
+                      background: "#ffe9e9",
+                    }}
+                    onClick={async () => {
+                      if (!window.confirm(`Delete vehicle '${v.name}'?`)) return;
+                      try {
+                        await deleteVehicle(v.id);
+                        await refresh();
+                      } catch (e) {
+                        setError((e as Error).message);
+                      }
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}
