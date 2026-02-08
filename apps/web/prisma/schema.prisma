@@ -146,3 +146,15 @@ model Receipt {
   fillUp FillUp @relation(fields: [fillUpId], references: [id], onDelete: Cascade)
   @@index([fillUpId])
 }
+
+model RateLimitWindow {
+  id          String   @id @default(cuid())
+  key         String
+  windowStart DateTime
+  count       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([key, windowStart])
+  @@index([key, windowStart])
+}
