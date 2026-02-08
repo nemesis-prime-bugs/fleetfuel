@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireUserApi } from "@/lib/auth/requireUserApi";
 import { ensureReceiptsDir, RECEIPTS_DIR } from "@/lib/receipts/storage";
+import { isJpeg, isPng } from "@/lib/receipts/magic";
 
 export async function POST(req: Request) {
   const { user, error } = await requireUserApi();
@@ -43,7 +44,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "File too large" }, { status: 400 });
   }
 
-  // Hardening continues in next tasks (magic bytes, EXIF strip).
+  if (file.type === "image/jpeg" && !isJpeg(bytes)) {
+    return NextResponse.json({ error: "Invalid JPEG file" }, { status: 400 });
+  }
+  if (file.type === "image/png" && !isPng(bytes)) {
+    return NextResponse.json({ error: "Invalid PNG file" }, { status: 400 });
+  }
+
+  // Hardening continues in next tasks (EXIF strip).
   const ext = path.extname(file.name || "").slice(0, 8) || ".bin";
   const basename = `${crypto.randomUUID()}${ext}`;
   const relKey = `receipts/${basename}`;
