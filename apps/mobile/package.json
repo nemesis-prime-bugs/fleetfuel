@@ -21,6 +21,8 @@
     "@capacitor/ios": "7.4.3",
     "@capacitor/preferences": "7.0.3",
     "@fleetfuel/shared": "workspace:^",
+    "@radix-ui/react-label": "2.1.8",
+    "@radix-ui/react-switch": "1.2.6",
     "jeep-sqlite": "2.8.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

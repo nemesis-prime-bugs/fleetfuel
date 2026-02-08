@@ -23,6 +23,15 @@ Format:
 - Notes:
   - For MVP we store the bearer session token here; later replace with secure-storage.
 
+### 2026-02-08 (UTC) — Mobile UX deps for storage mode switch
+- Operator/machine: nemesis-prime@NemesisPrimeBot
+- Repo: FleetFuel (`projects/fleetfuel`)
+- Intent: basic switch/toggle UI for local vs server mode (MOB-7).
+- Registry: https://registry.npmjs.org/
+- Commands:
+  - `cd apps/mobile`
+  - `corepack pnpm@10.6.1 add @radix-ui/react-label@2.1.8 @radix-ui/react-switch@1.2.6`
+
 ### 2026-02-08 (UTC) — Mobile local persistence dependencies (SQLite)
 - Operator/machine: nemesis-prime@NemesisPrimeBot
 - Repo: FleetFuel (`projects/fleetfuel`)
