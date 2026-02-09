@@ -17,7 +17,8 @@
     "test:password": "tsx scripts/password-selftest.ts",
     "test:sessiontoken": "tsx scripts/sessiontoken-selftest.ts",
     "test:consumption": "tsx scripts/consumption-selftest.ts",
-    "test:ratelimitdurable": "tsx scripts/ratelimitdurable-selftest.ts"
+    "test:ratelimitdurable": "tsx scripts/ratelimitdurable-selftest.ts",
+    "smoke:api": "tsx scripts/smoke-api.ts"
   },
   "dependencies": {
     "@fleetfuel/shared": "workspace:^",
