@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import { ErrorSummary, type FieldErrorItem } from "@/components/error-summary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const fieldErrors = useMemo<FieldErrorItem[]>(() => {
+    const errs: FieldErrorItem[] = [];
+    const emailTrim = email.trim();
+    if (!emailTrim) errs.push({ fieldId: "login-email", message: "Email is required" });
+    else if (!emailTrim.includes("@")) errs.push({ fieldId: "login-email", message: "Enter a valid email address" });
+
+    if (!password) errs.push({ fieldId: "login-password", message: "Password is required" });
+
+    return errs;
+  }, [email, password]);
 
   useEffect(() => {
     // If already logged in, redirect to /app.
@@ -39,6 +51,8 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <ErrorSummary errors={fieldErrors} />
+
           {error ? (
             <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">
               <b>Login failed:</b> {error}
@@ -50,6 +64,9 @@ export default function LoginPage() {
             onSubmit={async (e) => {
               e.preventDefault();
               setError(null);
+
+              if (fieldErrors.length) return;
+
               setSubmitting(true);
               try {
                 const res = await fetch("/api/auth/login", {
@@ -70,7 +87,7 @@ export default function LoginPage() {
               }
             }}
           >
-            <div className="grid gap-2">
+            <div className="grid gap-2" id="login-email">
               <Label>Email</Label>
               <Input
                 value={email}
@@ -79,10 +96,11 @@ export default function LoginPage() {
                 type="email"
                 autoComplete="email"
                 required
+                aria-invalid={fieldErrors.some((e) => e.fieldId === "login-email")}
               />
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-2" id="login-password">
               <Label>Password</Label>
               <Input
                 value={password}
@@ -91,6 +109,7 @@ export default function LoginPage() {
                 type="password"
                 autoComplete="current-password"
                 required
+                aria-invalid={fieldErrors.some((e) => e.fieldId === "login-password")}
               />
             </div>
 

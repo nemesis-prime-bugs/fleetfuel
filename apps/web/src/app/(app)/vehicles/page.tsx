@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+import { ErrorSummary, type FieldErrorItem } from "@/components/error-summary";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +34,14 @@ export default function VehiclesPage() {
   const [fuelType, setFuelType] = useState<Vehicle["fuelType"]>("GASOLINE");
   const [unitSystem, setUnitSystem] = useState<Vehicle["unitSystem"]>("METRIC");
   const [submitting, setSubmitting] = useState(false);
+
+  const fieldErrors = useMemo<FieldErrorItem[]>(() => {
+    const errs: FieldErrorItem[] = [];
+    const n = name.trim();
+    if (!n) errs.push({ fieldId: "vehicle-name", message: "Vehicle name is required" });
+    else if (n.length > 64) errs.push({ fieldId: "vehicle-name", message: "Vehicle name must be 64 characters or less" });
+    return errs;
+  }, [name]);
 
   async function refresh() {
     setLoading(true);
@@ -85,10 +95,13 @@ export default function VehiclesPage() {
           <CardTitle>Add vehicle</CardTitle>
         </CardHeader>
         <CardContent>
+          <ErrorSummary errors={fieldErrors} />
+
           <form
             className="grid gap-4 md:grid-cols-4"
             onSubmit={async (e) => {
               e.preventDefault();
+              if (fieldErrors.length) return;
               setSubmitting(true);
               try {
                 const res = await fetch("/api/vehicles", {
@@ -108,9 +121,15 @@ export default function VehiclesPage() {
               }
             }}
           >
-            <div className="grid gap-2 md:col-span-2">
+            <div className="grid gap-2 md:col-span-2" id="vehicle-name">
               <Label>Name</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Golf" required />
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Golf"
+                required
+                aria-invalid={fieldErrors.some((e) => e.fieldId === "vehicle-name")}
+              />
             </div>
 
             <div className="grid gap-2">
