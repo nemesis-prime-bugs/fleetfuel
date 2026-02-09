@@ -1,6 +1,6 @@
 # ADR-0007: Database choice for local-first MVP
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-02-09
 
 ## Context

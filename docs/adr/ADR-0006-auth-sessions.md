@@ -1,6 +1,6 @@
 # ADR-0006: Auth + session strategy (local-first MVP)
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-02-09
 
 ## Context

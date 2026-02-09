@@ -2,63 +2,56 @@
 
 Stand: 2026-02-09 (UTC)
 
-Constraint: no unreviewed downloads/abstractions. This file is the **explicit allowlist proposal** for the first scaffold.
+Constraint: no unreviewed downloads/abstractions. This file is the **explicit allowlist** for the MVP scaffold.
+
+Source of truth for what is already installed: `SECURITY_LOG.md` + `docs/CURRENT_STATE.md`.
 
 ## Approval rules
 For each dependency:
 - Purpose is clear and necessary for MVP.
-- Avoid native modules unless they save significant time and risk is manageable.
-- Prefer small, well-maintained packages.
+- Native modules are acceptable when they materially reduce security/complexity risk (argon2, sharp).
+- Prefer pinned versions and committed lockfile.
 
 ---
 
-## Proposed allowlist (Phase 1 scaffold)
+## Approved (apps/web)
 
 ### Framework
-- `next` — web framework
-- `react`, `react-dom` — UI runtime
+- `next@16.1.6`
+- `react@18`, `react-dom@18`
 
 ### TypeScript
 - `typescript`
 - `@types/node`, `@types/react`, `@types/react-dom`
 
-### Styling
-- `tailwindcss`
-- `postcss`
-- `autoprefixer`
+### Styling/UI
+- `tailwindcss`, `postcss`, `autoprefixer`
+- Radix UI packages currently in repo (used for UI primitives)
+- `clsx`, `tailwind-merge`, `class-variance-authority`
 
-### Validation
-- `zod` — input validation + shared schemas
+### Database / ORM
+- `prisma@6.19.2`
+- `@prisma/client@6.19.2`
 
-### Lint/format (optional but recommended)
-- `eslint`, `eslint-config-next`
-- `prettier`
+### Auth/security
+- `argon2@0.44.0` (native) — password hashing
+- `cookie@1.0.2` — cookie parsing/serialization
+
+### Receipt processing
+- `sharp@0.34.5` (native) — safe re-encode / metadata stripping
+
+### Dev / tooling
+- `eslint`, `eslint-config-next`, `@next/eslint-plugin-next`
+- `tsx@4.21.0`
 
 ---
 
-## Deferred (needs explicit decision)
-
-### Database + migrations
-Option A: Drizzle
-- `drizzle-orm`
-- `drizzle-kit`
-- SQLite driver: `better-sqlite3` (native) OR alternative
-
-Option B: Raw SQL
-- SQLite driver only
-
-### Auth hashing
-- Argon2 implementation (likely native): `@node-rs/argon2` OR `argon2`
-- Alternative: `bcrypt` (native)
-
-### Receipt EXIF stripping / image processing
-- Avoid heavy/native until required.
-- If needed:
-  - `sharp` (native)
-  - `exiftool-vendored` (large)
+## Explicitly not approved (for now)
+- Additional auth frameworks/suites (NextAuth/Auth.js, Clerk, etc.)
+- Additional ORMs/migration systems (Drizzle) unless we intentionally migrate
+- Heavy image/OCR tooling
 
 ---
 
 ## Notes
-- Local-first MVP can accept storing PNG as-is and stripping EXIF for JPEG via minimal custom logic if we want to avoid native deps.
-- Once this allowlist is approved, we can scaffold `apps/web` without improvisation.
+- Any new dependency must be recorded in `SECURITY_LOG.md` before install.

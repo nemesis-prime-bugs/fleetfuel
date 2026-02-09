@@ -20,22 +20,18 @@ Constraint: 0€/mo, local-first, security-conscious.
 ## Database
 - SQLite (local file)
 
-## DB access / migrations (proposal)
-Option A (preferred): **Drizzle ORM** + `drizzle-kit` migrations
-- Why: lightweight, TypeScript-first, works well with SQLite, fewer “magic” behaviors than Prisma.
-
-SQLite driver (choose one):
-- `better-sqlite3` (sync, fast, simplest for local) 
-  - Note: native module build.
-- or `sqlite3` (also native)
+## DB access / migrations (accepted)
+- **Prisma v6** + `@prisma/client` (see `docs/adr/ADR-0010-orm-prisma.md`)
+- Rationale: already implemented in repo; minimizes churn.
 
 ## Auth
-- Custom email+password + DB sessions (see ADR-0006)
-- Password hashing: `@node-rs/argon2` or `argon2` (needs confirmation on platform build)
+- Custom email+password + DB sessions (ADR-0006)
+- Password hashing: `argon2` (already installed; native)
 
 ## File uploads (receipts)
 - Multipart upload handling in Next route handler
-- Validation: allowlist JPEG/PNG; magic-byte check; size limit; EXIF strip
+- Validation: allowlist JPEG/PNG; magic-byte check; size limit
+- EXIF stripping: use `sharp` re-encode path (already installed) OR minimal JPEG EXIF strip (acceptable). We will default to `sharp` for correctness.
 
 ## Charts
 - Keep MVP charts simple (server aggregates + minimal client rendering)

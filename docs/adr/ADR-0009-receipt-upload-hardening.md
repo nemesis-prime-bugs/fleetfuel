@@ -1,6 +1,6 @@
 # ADR-0009: Receipt upload hardening (MVP)
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-02-09
 
 ## Context

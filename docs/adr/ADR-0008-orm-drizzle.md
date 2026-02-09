@@ -1,6 +1,6 @@
 # ADR-0008: ORM + migrations
 
-- Status: Proposed
+- Status: Superseded
 - Date: 2026-02-09
 
 ## Context
