@@ -19,9 +19,9 @@ function createPrisma(): AnyPrismaClient {
   const PrismaClient =
     env.DB_MODE === "postgres"
       ? // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require("@/generated/prisma-postgres").PrismaClient
+        require("../generated/prisma-postgres").PrismaClient
       : // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require("@/generated/prisma-sqlite").PrismaClient;
+        require("../generated/prisma-sqlite").PrismaClient;
 
   return new PrismaClient();
 }
