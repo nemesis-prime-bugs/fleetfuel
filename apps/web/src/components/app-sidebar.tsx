@@ -9,7 +9,6 @@ import {
   Fuel,
   LayoutDashboard,
   Users,
-  User,
 } from "lucide-react";
 
 import {
@@ -31,7 +30,7 @@ const nav = [
   { href: "/fillups", label: "Fill-ups", icon: Fuel },
   { href: "/trips", label: "Trips", icon: ClipboardList },
   { href: "/drivers", label: "Drivers", icon: Users },
-  { href: "/profile", label: "Profile", icon: User },
+  // Profile is available via the top-right user menu (avoid redundant nav entries).
 ];
 
 export function AppSidebar() {
