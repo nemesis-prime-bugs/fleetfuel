@@ -2,12 +2,13 @@
 
 ## Now
 - [x] ADR-0001: monolith-first Next.js
-- [x] ADR-0002: hosting (Vercel free) + DB choice
+- [x] ADR-0002: hosting approach under 0€/mo (local-first MVP)
 - [x] ADR-0003: receipt storage Phase 0 (local-only)
 - [x] Write Projekt Antrag / Auftrag (`docs/PROJEKT_ANTRAG.md`)
-- [ ] Define data model (users/accounts/vehicles/fillups/trips/receipts/drivers)
-- [ ] Choose stack details (auth/session strategy; DB)
-- [ ] Scaffold Next.js repo (pending dependency approval)
+- [x] Define data model (users/accounts/vehicles/fillups/trips/receipts/drivers) → `docs/DATA_MODEL.md`
+- [ ] Confirm stack details (auth/session strategy; DB; ORM; hashing; upload hardening)
+- [ ] Approve dependency allowlist → `docs/DEPENDENCY_APPROVAL.md`
+- [ ] Scaffold Next.js repo (`apps/web`) after allowlist approval
 
 ## MVP backlog
 - [ ] Auth: signup/login/logout (email+password)
