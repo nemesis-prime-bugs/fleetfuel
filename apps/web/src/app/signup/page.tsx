@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+import { ErrorSummary, type FieldErrorItem } from "@/components/error-summary";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +19,18 @@ export default function SignupPage() {
   const [accountType, setAccountType] = useState<AccountType>("PERSONAL");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const fieldErrors = useMemo<FieldErrorItem[]>(() => {
+    const errs: FieldErrorItem[] = [];
+    const emailTrim = email.trim();
+    if (!emailTrim) errs.push({ fieldId: "signup-email", message: "Email is required" });
+    else if (!emailTrim.includes("@")) errs.push({ fieldId: "signup-email", message: "Enter a valid email address" });
+
+    if (!password) errs.push({ fieldId: "signup-password", message: "Password is required" });
+    else if (password.length < 12) errs.push({ fieldId: "signup-password", message: "Password must be at least 12 characters" });
+
+    return errs;
+  }, [email, password]);
 
   useEffect(() => {
     // If already logged in, redirect to /app.
@@ -43,6 +57,8 @@ export default function SignupPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <ErrorSummary errors={fieldErrors} />
+
           {error ? (
             <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm">
               <b>Signup failed:</b> {error}
@@ -54,6 +70,10 @@ export default function SignupPage() {
             onSubmit={async (e) => {
               e.preventDefault();
               setError(null);
+
+              // Client-side guard for nicer UX; server still validates.
+              if (fieldErrors.length) return;
+
               setSubmitting(true);
               try {
                 const res = await fetch("/api/auth/signup", {
@@ -74,7 +94,7 @@ export default function SignupPage() {
               }
             }}
           >
-            <div className="grid gap-2">
+            <div className="grid gap-2" id="signup-email">
               <Label>Email</Label>
               <Input
                 value={email}
@@ -83,10 +103,11 @@ export default function SignupPage() {
                 type="email"
                 autoComplete="email"
                 required
+                aria-invalid={fieldErrors.some((e) => e.fieldId === "signup-email")}
               />
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-2" id="signup-password">
               <Label>Password</Label>
               <Input
                 value={password}
@@ -95,6 +116,7 @@ export default function SignupPage() {
                 type="password"
                 autoComplete="new-password"
                 required
+                aria-invalid={fieldErrors.some((e) => e.fieldId === "signup-password")}
               />
             </div>
 

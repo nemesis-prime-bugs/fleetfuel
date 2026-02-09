@@ -67,9 +67,19 @@ export default async function AppPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-8">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back, {user.email}</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">This month at a glance.</p>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button asChild>
+            <Link href="/fillups">Add fill-up</Link>
+          </Button>
+          <Button asChild variant="secondary">
+            <Link href="/trips">Add trip</Link>
+          </Button>
+        </div>
       </div>
 
       {!hasAnyData ? (
@@ -129,26 +139,8 @@ export default async function AppPage() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick actions</CardTitle>
-          <CardDescription>Do the common things fast.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-2 sm:flex-row">
-          <Button asChild>
-            <Link href="/fillups">Add fill-up</Link>
-          </Button>
-          <Button asChild variant="secondary">
-            <Link href="/trips">Add trip</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/vehicles">Vehicles</Link>
-          </Button>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Recent fill-ups</CardTitle>
             <CardDescription>Your last 5 fuel entries.</CardDescription>
@@ -180,21 +172,18 @@ export default async function AppPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Navigation</CardTitle>
-            <CardDescription>Everything else is still here, just quieter.</CardDescription>
+            <CardTitle>Shortcuts</CardTitle>
+            <CardDescription>Less noise, same access.</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-2 sm:grid-cols-2">
-            <Button asChild variant="ghost" className="justify-start">
-              <Link href="/dashboard">Monthly charts</Link>
+          <CardContent className="grid gap-2">
+            <Button asChild variant="secondary" className="justify-start">
+              <Link href="/vehicles">Vehicles</Link>
             </Button>
-            <Button asChild variant="ghost" className="justify-start">
+            <Button asChild variant="secondary" className="justify-start">
+              <Link href="/dashboard">Monthly report</Link>
+            </Button>
+            <Button asChild variant="secondary" className="justify-start">
               <Link href="/drivers">Drivers</Link>
-            </Button>
-            <Button asChild variant="ghost" className="justify-start">
-              <Link href="/profile">Profile</Link>
-            </Button>
-            <Button asChild variant="ghost" className="justify-start">
-              <Link href="/account">Account</Link>
             </Button>
           </CardContent>
         </Card>
