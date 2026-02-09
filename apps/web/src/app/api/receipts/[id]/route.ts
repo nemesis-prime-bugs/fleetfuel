@@ -8,6 +8,10 @@ import { requireUserApi } from "@/lib/auth/requireUserApi";
 import { RECEIPTS_DIR } from "@/lib/receipts/storage";
 
 export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  if (process.env.RECEIPTS_MODE === "disabled") {
+    return NextResponse.json({ error: "Receipts are disabled in this deployment" }, { status: 501 });
+  }
+
   const { user, error } = await requireUserApi();
   if (error) return error;
 

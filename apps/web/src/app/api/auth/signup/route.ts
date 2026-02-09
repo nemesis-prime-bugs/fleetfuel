@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "@/generated/prisma-sqlite";
 import { prisma } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/password";
 import { validateAndNormalizeSignupInput, type SignupInput } from "@/lib/auth/signupValidation";

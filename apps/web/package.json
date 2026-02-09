@@ -4,10 +4,16 @@
   "private": true,
   "packageManager": "pnpm@10.6.1",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+
+    "dev": "pnpm prisma:generate:sqlite && next dev",
+    "build": "pnpm prisma:generate:all && next build",
     "start": "next start",
     "lint": "eslint .",
+
+    "prisma:generate:sqlite": "prisma generate --schema prisma/schema.sqlite.prisma",
+    "prisma:generate:postgres": "prisma generate --schema prisma/schema.postgres.prisma",
+    "prisma:generate:all": "pnpm prisma:generate:sqlite && pnpm prisma:generate:postgres",
+
     "test:password": "tsx scripts/password-selftest.ts",
     "test:sessiontoken": "tsx scripts/sessiontoken-selftest.ts",
     "test:consumption": "tsx scripts/consumption-selftest.ts",

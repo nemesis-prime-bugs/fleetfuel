@@ -1,6 +1,12 @@
 export type AppEnv = {
   DATABASE_URL: string;
 
+  // Database mode (for Vercel path)
+  DB_MODE: "sqlite" | "postgres";
+
+  // Feature flags
+  RECEIPTS_MODE: "local" | "disabled"; // Supabase/S3 later
+
   // Rate limiting (durable)
   RATE_LIMIT_SIGNUP_IP_PER_MIN: number;
   RATE_LIMIT_SIGNUP_EMAIL_PER_MIN: number;
@@ -20,6 +26,14 @@ export function getEnv(): AppEnv {
     );
   }
 
+  const DB_MODE = (process.env.DB_MODE ?? "sqlite") as AppEnv["DB_MODE"];
+  if (DB_MODE !== "sqlite" && DB_MODE !== "postgres") throw new Error("Invalid env DB_MODE");
+
+  const RECEIPTS_MODE = (process.env.RECEIPTS_MODE ?? "local") as AppEnv["RECEIPTS_MODE"];
+  if (RECEIPTS_MODE !== "local" && RECEIPTS_MODE !== "disabled") {
+    throw new Error("Invalid env RECEIPTS_MODE");
+  }
+
   const RATE_LIMIT_SIGNUP_IP_PER_MIN = Number(process.env.RATE_LIMIT_SIGNUP_IP_PER_MIN ?? 10);
   const RATE_LIMIT_SIGNUP_EMAIL_PER_MIN = Number(process.env.RATE_LIMIT_SIGNUP_EMAIL_PER_MIN ?? 5);
   const RATE_LIMIT_LOGIN_IP_PER_MIN = Number(process.env.RATE_LIMIT_LOGIN_IP_PER_MIN ?? 20);
@@ -36,6 +50,8 @@ export function getEnv(): AppEnv {
 
   cached = {
     DATABASE_URL,
+    DB_MODE,
+    RECEIPTS_MODE,
     RATE_LIMIT_SIGNUP_IP_PER_MIN,
     RATE_LIMIT_SIGNUP_EMAIL_PER_MIN,
     RATE_LIMIT_LOGIN_IP_PER_MIN,

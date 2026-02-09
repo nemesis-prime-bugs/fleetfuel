@@ -41,3 +41,6 @@ next-env.d.ts
 
 # local receipt storage
 data/
+
+# generated prisma clients (dual db mode)
+src/generated/

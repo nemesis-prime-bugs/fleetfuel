@@ -11,6 +11,11 @@ import { ensureReceiptsDir, RECEIPTS_DIR } from "@/lib/receipts/storage";
 import { isJpeg, isPng } from "@/lib/receipts/magic";
 
 export async function POST(req: Request) {
+  // Cloud deploy v0: receipts disabled (until object storage is implemented).
+  if (process.env.RECEIPTS_MODE === "disabled") {
+    return NextResponse.json({ error: "Receipts are disabled in this deployment" }, { status: 501 });
+  }
+
   const { user, error } = await requireUserApi();
   if (error) return error;
 

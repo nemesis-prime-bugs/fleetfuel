@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 
+import { receiptsEnabled } from "@/lib/flags";
+
 type Vehicle = {
   id: string;
   name: string;
@@ -114,6 +116,8 @@ export default function FillUpsPage() {
   useEffect(() => {
     if (vehicleId) refreshFillUps(vehicleId);
   }, [vehicleId]);
+
+  const receiptsOn = receiptsEnabled();
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
@@ -246,34 +250,40 @@ export default function FillUpsPage() {
                       </div>
 
                       <div className="flex flex-wrap gap-2">
-                        <label className="inline-flex">
-                          <Button asChild variant="secondary" size="sm">
-                            <span>Attach receipt</span>
+                        {receiptsOn ? (
+                          <label className="inline-flex">
+                            <Button asChild variant="secondary" size="sm">
+                              <span>Attach receipt</span>
+                            </Button>
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                try {
+                                  const fd = new FormData();
+                                  fd.set("fillUpId", f.id);
+                                  fd.set("file", file);
+                                  const res = await fetch("/api/receipts/upload", { method: "POST", body: fd });
+                                  const data = (await res.json()) as { error?: string };
+                                  if (!res.ok) throw new Error(data.error ?? "Upload failed");
+                                  toast.success("Receipt uploaded");
+                                  await refreshFillUps(vehicleId);
+                                } catch (e2) {
+                                  toast.error((e2 as Error).message);
+                                } finally {
+                                  e.target.value = "";
+                                }
+                              }}
+                            />
+                          </label>
+                        ) : (
+                          <Button variant="secondary" size="sm" disabled>
+                            Receipts disabled (cloud)
                           </Button>
-                          <input
-                            type="file"
-                            accept="image/jpeg,image/png"
-                            className="hidden"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              try {
-                                const fd = new FormData();
-                                fd.set("fillUpId", f.id);
-                                fd.set("file", file);
-                                const res = await fetch("/api/receipts/upload", { method: "POST", body: fd });
-                                const data = (await res.json()) as { error?: string };
-                                if (!res.ok) throw new Error(data.error ?? "Upload failed");
-                                toast.success("Receipt uploaded");
-                                await refreshFillUps(vehicleId);
-                              } catch (e2) {
-                                toast.error((e2 as Error).message);
-                              } finally {
-                                e.target.value = "";
-                              }
-                            }}
-                          />
-                        </label>
+                        )}
 
                         <Button
                           variant="secondary"

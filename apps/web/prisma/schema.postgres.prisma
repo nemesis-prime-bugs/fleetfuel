@@ -1,19 +1,17 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// This file is kept for backwards compatibility.
-// Local-first uses `schema.sqlite.prisma`.
-// Vercel deploy uses `schema.postgres.prisma`.
+// Postgres schema (Vercel deployment)
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma-sqlite"
+  output   = "../src/generated/prisma-postgres"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// NOTE: Model definitions intentionally mirror SQLite schema.
+// If types must diverge (e.g., decimals), do it deliberately and update the app code.
 
 enum AccountType {
   PERSONAL
@@ -151,7 +149,7 @@ model Trip {
   endedAt       DateTime
   odometerStart Int
   odometerEnd   Int
-  distance      Int // km (derived: odometerEnd - odometerStart)
+  distance      Int
   notes         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
