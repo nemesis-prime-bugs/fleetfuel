@@ -72,6 +72,8 @@ export default function FillUpsPage() {
     if (!res.ok) throw new Error(data.error ?? "Delete failed");
   }
 
+  const hasVehicles = vehicles.length > 0;
+
   const canSubmit = useMemo(() => {
     if (!hasVehicles) return false;
     return !!vehicleId && !!occurredAt && !!odometer && !!fuelAmount && !!totalCost;
@@ -121,8 +123,6 @@ export default function FillUpsPage() {
   }, [vehicleId]);
 
   const receiptsOn = receiptsEnabled();
-
-  const hasVehicles = vehicles.length > 0;
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
