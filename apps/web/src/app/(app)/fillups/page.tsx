@@ -73,8 +73,9 @@ export default function FillUpsPage() {
   }
 
   const canSubmit = useMemo(() => {
+    if (!hasVehicles) return false;
     return !!vehicleId && !!occurredAt && !!odometer && !!fuelAmount && !!totalCost;
-  }, [vehicleId, occurredAt, odometer, fuelAmount, totalCost]);
+  }, [hasVehicles, vehicleId, occurredAt, odometer, fuelAmount, totalCost]);
 
   async function loadVehicles() {
     const res = await fetch("/api/vehicles");
@@ -115,9 +116,13 @@ export default function FillUpsPage() {
 
   useEffect(() => {
     if (vehicleId) refreshFillUps(vehicleId);
+    else if (!loading) setFillUps([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicleId]);
 
   const receiptsOn = receiptsEnabled();
+
+  const hasVehicles = vehicles.length > 0;
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
@@ -129,9 +134,9 @@ export default function FillUpsPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Label className="text-sm">Vehicle</Label>
-          <Select value={vehicleId} onValueChange={setVehicleId}>
+          <Select value={vehicleId} onValueChange={setVehicleId} disabled={!hasVehicles}>
             <SelectTrigger className="w-[260px]">
-              <SelectValue placeholder="Select vehicle" />
+              <SelectValue placeholder={hasVehicles ? "Select vehicle" : "No vehicles yet"} />
             </SelectTrigger>
             <SelectContent>
               {vehicles.map((v) => (
@@ -147,6 +152,21 @@ export default function FillUpsPage() {
           <a href="/vehicles">Manage vehicles</a>
         </Button>
       </div>
+
+      {!hasVehicles ? (
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">
+              You need to create a vehicle before you can add fill-ups.
+            </p>
+            <div className="mt-3">
+              <Button asChild>
+                <a href="/vehicles">Create vehicle</a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>
