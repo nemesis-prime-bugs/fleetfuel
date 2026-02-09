@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 
+import { ErrorSummary, type FieldErrorItem } from "@/components/error-summary";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,10 +75,34 @@ export default function FillUpsPage() {
 
   const hasVehicles = vehicles.length > 0;
 
+  const fieldErrors = useMemo<FieldErrorItem[]>(() => {
+    const errs: FieldErrorItem[] = [];
+
+    if (!hasVehicles) {
+      errs.push({ fieldId: "fillup-vehicle", message: "Create a vehicle first" });
+      return errs;
+    }
+
+    if (!vehicleId) errs.push({ fieldId: "fillup-vehicle", message: "Vehicle is required" });
+
+    const odo = Number(odometer);
+    if (!odometer) errs.push({ fieldId: "fillup-odometer", message: "Odometer is required" });
+    else if (!Number.isFinite(odo) || odo <= 0) errs.push({ fieldId: "fillup-odometer", message: "Enter a valid odometer" });
+
+    const fuel = Number(fuelAmount);
+    if (!fuelAmount) errs.push({ fieldId: "fillup-fuel", message: "Fuel amount is required" });
+    else if (!Number.isFinite(fuel) || fuel <= 0) errs.push({ fieldId: "fillup-fuel", message: "Enter a valid fuel amount" });
+
+    const cost = Number(totalCost);
+    if (!totalCost) errs.push({ fieldId: "fillup-cost", message: "Total cost is required" });
+    else if (!Number.isFinite(cost) || cost < 0) errs.push({ fieldId: "fillup-cost", message: "Enter a valid total cost" });
+
+    return errs;
+  }, [hasVehicles, vehicleId, odometer, fuelAmount, totalCost]);
+
   const canSubmit = useMemo(() => {
-    if (!hasVehicles) return false;
-    return !!vehicleId && !!occurredAt && !!odometer && !!fuelAmount && !!totalCost;
-  }, [hasVehicles, vehicleId, occurredAt, odometer, fuelAmount, totalCost]);
+    return fieldErrors.length === 0;
+  }, [fieldErrors.length]);
 
   async function loadVehicles() {
     const res = await fetch("/api/vehicles");
@@ -132,10 +157,10 @@ export default function FillUpsPage() {
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center" id="fillup-vehicle">
           <Label className="text-sm">Vehicle</Label>
           <Select value={vehicleId} onValueChange={setVehicleId} disabled={!hasVehicles}>
-            <SelectTrigger className="w-[260px]">
+            <SelectTrigger className="w-[260px]" aria-invalid={fieldErrors.some((e) => e.fieldId === "fillup-vehicle")}>
               <SelectValue placeholder={hasVehicles ? "Select vehicle" : "No vehicles yet"} />
             </SelectTrigger>
             <SelectContent>
@@ -173,6 +198,8 @@ export default function FillUpsPage() {
           <CardTitle>Add fill-up</CardTitle>
         </CardHeader>
         <CardContent>
+          <ErrorSummary errors={fieldErrors} />
+
           <form
             className="grid gap-4 md:grid-cols-6"
             onSubmit={async (e) => {
@@ -218,19 +245,37 @@ export default function FillUpsPage() {
               </Popover>
             </div>
 
-            <div className="grid gap-2 md:col-span-2">
+            <div className="grid gap-2 md:col-span-2" id="fillup-odometer">
               <Label>Odometer</Label>
-              <Input value={odometer} onChange={(e) => setOdometer(e.target.value)} inputMode="numeric" placeholder="e.g. 120000" />
+              <Input
+                value={odometer}
+                onChange={(e) => setOdometer(e.target.value)}
+                inputMode="numeric"
+                placeholder="e.g. 120000"
+                aria-invalid={fieldErrors.some((e) => e.fieldId === "fillup-odometer")}
+              />
             </div>
 
-            <div className="grid gap-2 md:col-span-1">
+            <div className="grid gap-2 md:col-span-1" id="fillup-fuel">
               <Label>Fuel</Label>
-              <Input value={fuelAmount} onChange={(e) => setFuelAmount(e.target.value)} inputMode="decimal" placeholder="e.g. 45.2" />
+              <Input
+                value={fuelAmount}
+                onChange={(e) => setFuelAmount(e.target.value)}
+                inputMode="decimal"
+                placeholder="e.g. 45.2"
+                aria-invalid={fieldErrors.some((e) => e.fieldId === "fillup-fuel")}
+              />
             </div>
 
-            <div className="grid gap-2 md:col-span-1">
+            <div className="grid gap-2 md:col-span-1" id="fillup-cost">
               <Label>Total cost ({currency})</Label>
-              <Input value={totalCost} onChange={(e) => setTotalCost(e.target.value)} inputMode="decimal" placeholder="e.g. 70.40" />
+              <Input
+                value={totalCost}
+                onChange={(e) => setTotalCost(e.target.value)}
+                inputMode="decimal"
+                placeholder="e.g. 70.40"
+                aria-invalid={fieldErrors.some((e) => e.fieldId === "fillup-cost")}
+              />
             </div>
 
             <div className="flex items-center gap-2 md:col-span-6">
