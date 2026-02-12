@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -82,10 +83,22 @@ function Bars({ title, unit, data }: { title: string; unit: string; data: BarDat
 
 export default function DashboardPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [vehicleId, setVehicleId] = useState<string>("");
+  const [vehicleId, setVehicleId] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("dashboard_vehicle_id") || "";
+    }
+    return "";
+  });
   const [months, setMonths] = useState<MonthRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Persist vehicle selection to localStorage
+  useEffect(() => {
+    if (vehicleId) {
+      localStorage.setItem("dashboard_vehicle_id", vehicleId);
+    }
+  }, [vehicleId]);
 
   const totals = useMemo(() => {
     const fuel = months.reduce((sum, m) => sum + m.fuelAmount, 0);
@@ -160,31 +173,49 @@ export default function DashboardPage() {
           <p className="text-muted-foreground">Monthly spend + fuel totals per vehicle.</p>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Select value={vehicleId} onValueChange={setVehicleId}>
-            <SelectTrigger className="w-[240px]">
-              <SelectValue placeholder="Select vehicle" />
-            </SelectTrigger>
-            <SelectContent>
-              {vehicles.map((v) => (
-                <SelectItem key={v.id} value={v.id}>
-                  {v.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {vehicles.length > 0 ? (
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Select value={vehicleId} onValueChange={setVehicleId}>
+              <SelectTrigger className="w-[240px]">
+                <SelectValue placeholder="Select vehicle" />
+              </SelectTrigger>
+              <SelectContent>
+                {vehicles.map((v) => (
+                  <SelectItem key={v.id} value={v.id}>
+                    {v.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          <div className="flex gap-2">
-            <Button asChild variant="secondary" disabled={!vehicleId}>
-              <a href={`/api/export/csv?vehicleId=${encodeURIComponent(vehicleId)}&kind=fillups`} target="_blank" rel="noreferrer">
-                Export fill-ups
-              </a>
-            </Button>
-            <Button asChild variant="secondary" disabled={!vehicleId}>
-              <a href={`/api/export/csv?vehicleId=${encodeURIComponent(vehicleId)}&kind=trips`} target="_blank" rel="noreferrer">
-                Export trips
-              </a>
-            </Button>
+            <div className="flex gap-2">
+              <Button asChild variant="secondary" disabled={!vehicleId}>
+                <a href={`/api/export/csv?vehicleId=${encodeURIComponent(vehicleId)}&kind=fillups`} target="_blank" rel="noreferrer">
+                  Export fill-ups
+                </a>
+              </Button>
+              <Button asChild variant="secondary" disabled={!vehicleId}>
+                <a href={`/api/export/csv?vehicleId=${encodeURIComponent(vehicleId)}&kind=trips`} target="_blank" rel="noreferrer">
+                  Export trips
+                </a>
+              </Button>
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      {vehicles.length === 0 ? (
+        <EmptyState
+          title="No vehicles yet"
+          description="Add your first vehicle to see dashboard metrics."
+          action={{ label: "Add vehicle", href: "/vehicles" }}
+        />
+      ) : vehicles.length > 0 && !vehicleId ? (
+        <EmptyState
+          title="Select a vehicle"
+          description="Choose a vehicle to view its dashboard metrics."
+        />
+      ) : null}
           </div>
         </div>
       </div>
