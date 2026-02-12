@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 
 import { ErrorSummary, type FieldErrorItem } from "@/components/error-summary";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -345,7 +346,13 @@ export default function FillUpsPage() {
         </CardHeader>
         <CardContent>
           {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
-          {!loading && fillUps.length === 0 ? <p className="text-sm text-muted-foreground">No fill-ups yet.</p> : null}
+          {!loading && fillUps.length === 0 ? (
+            <EmptyState
+              title="No fill-ups yet"
+              description="Add your first fill-up to start tracking fuel costs."
+              action={{ label: "Add fill-up", href: "#add-fillup" }}
+            />
+          ) : null}
 
           {fillUps.length ? (
             <div className="space-y-4">

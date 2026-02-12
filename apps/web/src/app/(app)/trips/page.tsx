@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { ErrorSummary, type FieldErrorItem } from "@/components/error-summary";
+import { EmptyState } from "@/components/empty-state";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -390,7 +391,13 @@ export default function TripsPage() {
         </CardHeader>
         <CardContent>
           {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
-          {!loading && trips.length === 0 ? <p className="text-sm text-muted-foreground">No trips yet.</p> : null}
+          {!loading && trips.length === 0 ? (
+            <EmptyState
+              title="No trips yet"
+              description="Add your first trip to start tracking your logbook."
+              action={{ label: "Add trip", href: "#add-trip" }}
+            />
+          ) : null}
 
           <div className="space-y-4">
             {grouped.map((g) => (

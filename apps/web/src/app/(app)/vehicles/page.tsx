@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { ErrorSummary, type FieldErrorItem } from "@/components/error-summary";
+import { EmptyState } from "@/components/empty-state";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -176,7 +177,13 @@ export default function VehiclesPage() {
         </CardHeader>
         <CardContent>
           {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
-          {!loading && vehicles.length === 0 ? <p className="text-sm text-muted-foreground">No vehicles yet.</p> : null}
+          {!loading && vehicles.length === 0 ? (
+            <EmptyState
+              title="No vehicles yet"
+              description="Add your first vehicle to start tracking fuel and trips."
+              action={{ label: "Add vehicle", href: "#add-vehicle" }}
+            />
+          ) : null}
 
           {vehicles.length ? (
             <div className="overflow-x-auto">
