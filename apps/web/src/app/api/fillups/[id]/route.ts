@@ -25,6 +25,28 @@ async function ensureOwnership(fillUpId: string, userId: string) {
   });
 }
 
+export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const { user, error } = await requireUserApi();
+  if (error) return error;
+
+  const { id } = await ctx.params;
+
+  const fillUp = await ensureOwnership(id, user!.id);
+  if (!fillUp) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const fillUpWithReceipts = await prisma.fillUp.findUnique({
+    where: { id },
+    include: {
+      receipts: {
+        select: { id: true, storageKey: true, contentType: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+      },
+    },
+  });
+
+  return NextResponse.json({ fillUp: fillUpWithReceipts }, { status: 200 });
+}
+
 export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { user, error } = await requireUserApi();
   if (error) return error;
