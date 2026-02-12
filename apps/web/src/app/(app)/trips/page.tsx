@@ -63,18 +63,42 @@ export default function TripsPage() {
   const [notes, setNotes] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const distancePreview = useMemo(() => {
-    const s = Number(odometerStart);
-    const e = Number(odometerEnd);
-    if (!Number.isFinite(s) || !Number.isFinite(e)) return null;
-    if (s <= 0 || e <= 0) return null;
-    if (e <= s) return null;
-    return Math.round(e - s);
-  }, [odometerStart, odometerEnd]);
+  const hasVehicles = vehicles.length > 0;
+  const hasDrivers = drivers.length > 0;
+
+  const fieldErrors = useMemo<FieldErrorItem[]>(() => {
+    const errs: FieldErrorItem[] = [];
+
+    if (!hasVehicles) {
+      errs.push({ fieldId: "trip-vehicle", message: "Create a vehicle first" });
+      return errs;
+    }
+
+    if (!vehicleId) errs.push({ fieldId: "trip-vehicle", message: "Vehicle is required" });
+    if (!hasDrivers) errs.push({ fieldId: "trip-driver", message: "Create a driver first" });
+    if (!driverId) errs.push({ fieldId: "trip-driver", message: "Driver is required" });
+
+    if (!startedAt) errs.push({ fieldId: "trip-start", message: "Start time is required" });
+    if (!endedAt) errs.push({ fieldId: "trip-end", message: "End time is required" });
+
+    const odoStart = Number(odometerStart);
+    if (!odometerStart) errs.push({ fieldId: "trip-odo-start", message: "Odometer start is required" });
+    else if (!Number.isFinite(odoStart) || odoStart <= 0) errs.push({ fieldId: "trip-odo-start", message: "Enter a valid odometer" });
+
+    const odoEnd = Number(odometerEnd);
+    if (!odometerEnd) errs.push({ fieldId: "trip-odo-end", message: "Odometer end is required" });
+    else if (!Number.isFinite(odoEnd) || odoEnd <= 0) errs.push({ fieldId: "trip-odo-end", message: "Enter a valid odometer" });
+
+    if (odoEnd <= odoStart && odometerStart && odometerEnd) {
+      errs.push({ fieldId: "trip-odo-end", message: "End odometer must be greater than start" });
+    }
+
+    return errs;
+  }, [hasVehicles, hasDrivers, vehicleId, driverId, startedAt, endedAt, odometerStart, odometerEnd]);
 
   const canSubmit = useMemo(() => {
-    return !!vehicleId && !!driverId && !!startedAt && !!endedAt && !!odometerStart && !!odometerEnd;
-  }, [vehicleId, driverId, startedAt, endedAt, odometerStart, odometerEnd]);
+    return fieldErrors.length === 0;
+  }, [fieldErrors.length]);
 
   async function loadVehicles() {
     const res = await fetch("/api/vehicles");
@@ -182,7 +206,7 @@ export default function TripsPage() {
           <div className="grid gap-2">
             <Label>Vehicle</Label>
             <Select value={vehicleId} onValueChange={setVehicleId}>
-              <SelectTrigger className="w-[260px]">
+              <SelectTrigger id="trip-vehicle" className="w-[260px]" aria-invalid={fieldErrors.some((e) => e.fieldId === "trip-vehicle")}>
                 <SelectValue placeholder="Select vehicle" />
               </SelectTrigger>
               <SelectContent>
@@ -198,7 +222,7 @@ export default function TripsPage() {
           <div className="grid gap-2">
             <Label>Driver</Label>
             <Select value={driverId} onValueChange={setDriverId}>
-              <SelectTrigger className="w-[260px]">
+              <SelectTrigger id="trip-driver" className="w-[260px]" aria-invalid={fieldErrors.some((e) => e.fieldId === "trip-driver")}>
                 <SelectValue placeholder="Select driver" />
               </SelectTrigger>
               <SelectContent>
@@ -223,6 +247,8 @@ export default function TripsPage() {
           <CardDescription>Time-based + odometer start/end. Distance is derived.</CardDescription>
         </CardHeader>
         <CardContent>
+          <ErrorSummary errors={fieldErrors} />
+
           <form
             className="grid gap-4 md:grid-cols-4"
             onSubmit={async (e) => {
@@ -257,19 +283,47 @@ export default function TripsPage() {
           >
             <div className="grid gap-2">
               <Label>Start</Label>
-              <Input type="datetime-local" value={startedAt} onChange={(e) => setStartedAt(e.target.value)} required />
+              <Input
+                id="trip-start"
+                type="datetime-local"
+                value={startedAt}
+                onChange={(e) => setStartedAt(e.target.value)}
+                required
+                aria-invalid={fieldErrors.some((e) => e.fieldId === "trip-start")}
+              />
             </div>
             <div className="grid gap-2">
               <Label>End</Label>
-              <Input type="datetime-local" value={endedAt} onChange={(e) => setEndedAt(e.target.value)} required />
+              <Input
+                id="trip-end"
+                type="datetime-local"
+                value={endedAt}
+                onChange={(e) => setEndedAt(e.target.value)}
+                required
+                aria-invalid={fieldErrors.some((e) => e.fieldId === "trip-end")}
+              />
             </div>
             <div className="grid gap-2">
               <Label>Odometer start</Label>
-              <Input value={odometerStart} onChange={(e) => setOdometerStart(e.target.value)} inputMode="numeric" required />
+              <Input
+                id="trip-odo-start"
+                value={odometerStart}
+                onChange={(e) => setOdometerStart(e.target.value)}
+                inputMode="numeric"
+                required
+                aria-invalid={fieldErrors.some((e) => e.fieldId === "trip-odo-start")}
+              />
             </div>
             <div className="grid gap-2">
               <Label>Odometer end</Label>
-              <Input value={odometerEnd} onChange={(e) => setOdometerEnd(e.target.value)} inputMode="numeric" required />
+              <Input
+                id="trip-odo-end"
+                value={odometerEnd}
+                onChange={(e) => setOdometerEnd(e.target.value)}
+                inputMode="numeric"
+                required
+                aria-invalid={fieldErrors.some((e) => e.fieldId === "trip-odo-end")}
+              />
             </div>
 
             <div className="grid gap-2 md:col-span-4">
@@ -306,6 +360,20 @@ export default function TripsPage() {
             ) : null}
 
             <div className="md:col-span-4 flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Distance preview: {(() => {
+                  const s = Number(odometerStart);
+                  const e = Number(odometerEnd);
+                  if (!Number.isFinite(s) || !Number.isFinite(e)) return "—";
+                  if (s <= 0 || e <= 0) return "—";
+                  if (e <= s) return "End must be > start";
+                  return `${Math.round(e - s)} km`;
+                })()}
+              </div>
+              <Button type="submit" disabled={!canSubmit || drivers.length === 0}>
+                Add
+              </Button>
+            </div>
               <div className="text-sm text-muted-foreground">Distance: {distancePreview === null ? "—" : `${distancePreview} km`}</div>
               <Button type="submit" disabled={!canSubmit || drivers.length === 0}>
                 Add
