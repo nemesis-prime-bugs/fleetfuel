@@ -2,12 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { ErrorSummary, type FieldErrorItem } from "@/components/error-summary";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { ChevronsUpDown } from "lucide-react";
 
 type Vehicle = {
   id: string;
@@ -58,6 +61,7 @@ export default function TripsPage() {
   const [odometerStart, setOdometerStart] = useState("");
   const [odometerEnd, setOdometerEnd] = useState("");
   const [notes, setNotes] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const distancePreview = useMemo(() => {
     const s = Number(odometerStart);
@@ -243,6 +247,7 @@ export default function TripsPage() {
                 setOdometerStart("");
                 setOdometerEnd("");
                 setNotes("");
+                setShowAdvanced(false);
                 toast.success("Trip added");
                 await refreshTrips(vehicleId);
               } catch (e2) {
@@ -268,9 +273,37 @@ export default function TripsPage() {
             </div>
 
             <div className="grid gap-2 md:col-span-4">
-              <Label>Notes (optional)</Label>
-              <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. customer visit" />
+              <Label>Odometer end</Label>
+              <Input value={odometerEnd} onChange={(e) => setOdometerEnd(e.target.value)} inputMode="numeric" required />
             </div>
+
+            <div className="md:col-span-4">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="flex items-center gap-2 px-0"
+              >
+                <ChevronsUpDown className="h-4 w-4" />
+                {showAdvanced ? "Hide" : "Show"} advanced options
+                <span className="text-muted-foreground text-xs">
+                  (notes)
+                </span>
+              </Button>
+            </div>
+
+            {showAdvanced ? (
+              <div className="grid gap-2 md:col-span-4">
+                <Label htmlFor="trip-notes">Notes</Label>
+                <Input
+                  id="trip-notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="e.g. customer visit"
+                />
+              </div>
+            ) : null}
 
             <div className="md:col-span-4 flex items-center justify-between">
               <div className="text-sm text-muted-foreground">Distance: {distancePreview === null ? "—" : `${distancePreview} km`}</div>
