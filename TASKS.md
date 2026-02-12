@@ -23,7 +23,7 @@
 ---
 
 ## MVP QA Tasks
-- [ ] Run smoke tests: `cd apps/web && pnpm smoke:api`
+- [x] Run smoke tests: `cd apps/web && pnpm smoke:api` **(PASSED 2026-02-12)**
 - [ ] Acceptance checklist validation: `docs/ACCEPTANCE_CHECKLIST.md`
 - [ ] Test all CRUD flows manually
 - [ ] Document edge cases found

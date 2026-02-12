@@ -2,50 +2,75 @@
 
 import { useEffect, useRef } from "react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
-export type FieldErrorItem = {
-  fieldId: string;
+export interface ErrorSummaryItem {
+  id: string;
   message: string;
-};
+}
 
-export function ErrorSummary({ title = "Please fix the following", errors }: { title?: string; errors: FieldErrorItem[] }) {
-  const ref = useRef<HTMLDivElement | null>(null);
+export interface ErrorSummaryProps {
+  title?: string;
+  errors: ErrorSummaryItem[];
+  focusId?: string;
+}
+
+/**
+ * Error Summary Component - GOV.UK pattern
+ *
+ * Displays a list of errors at the top of a form.
+ * Automatically focuses the component or a specified element when rendered.
+ *
+ * Usage:
+ * - Place at the top of forms
+ * - Pass array of { id, message } objects
+ * - Optional focusId to specify which element gets focus
+ */
+export function ErrorSummary({ title = "There is a problem", errors, focusId }: ErrorSummaryProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Focus on mount or when errors change
     if (errors.length > 0) {
-      // Focus summary for accessibility (WCAG-friendly pattern)
-      ref.current?.focus();
-    }
-  }, [errors.length]);
+      const focusTarget = focusId
+        ? document.getElementById(focusId)
+        : containerRef.current;
 
-  if (errors.length === 0) return null;
+      focusTarget?.focus();
+    }
+  }, [errors.length, focusId]);
+
+  if (errors.length === 0) {
+    return null;
+  }
 
   return (
-    <Alert ref={ref as any} tabIndex={-1} className="border-destructive/30 bg-destructive/10">
-      <AlertTitle className="text-destructive">{title}</AlertTitle>
-      <AlertDescription>
-        <ul className="mt-2 list-disc pl-5 space-y-1">
-          {errors.map((e) => (
-            <li key={e.fieldId}>
-              <a
-                href={`#${e.fieldId}`}
-                className="underline underline-offset-2"
-                onClick={(ev) => {
-                  ev.preventDefault();
-                  const el = document.getElementById(e.fieldId) as HTMLElement | null;
-                  el?.scrollIntoView({ behavior: "smooth", block: "center" });
-                  // if input is nested, try focus first form control
-                  const focusable = el?.querySelector("input,select,textarea,button") as HTMLElement | null;
-                  (focusable ?? el)?.focus?.();
-                }}
-              >
-                {e.message}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </AlertDescription>
-    </Alert>
+    <div
+      ref={containerRef}
+      className="rounded-md border border-destructive/30 bg-destructive/10 p-4 mb-6"
+      tabIndex={-1}
+      role="alert"
+      aria-live="polite"
+    >
+      <h2 className="text-base font-semibold text-destructive mb-3">
+        {title}
+      </h2>
+      <ul className="list-disc list-inside space-y-1">
+        {errors.map((error) => (
+          <li key={error.id} className="text-sm text-destructive/90">
+            <a
+              href={`#${error.id}`}
+              className="hover:underline focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2"
+              onClick={(e) => {
+                e.preventDefault();
+                const target = document.getElementById(error.id);
+                target?.focus();
+                target?.scrollIntoView({ behavior: "smooth", block: "center" });
+              }}
+            >
+              {error.message}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
