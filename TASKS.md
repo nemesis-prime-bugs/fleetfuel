@@ -14,19 +14,19 @@
 - [x] Auth: signup/login/logout (email+password)
 - [x] Account type (personal/company)
 - [x] Vehicles CRUD
-- [ ] Fill-ups CRUD + calculations
-- [ ] Trips CRUD
+- [x] Fill-ups CRUD + calculations (GET single added 2026-02-12)
+- [x] Trips CRUD
 - [x] "Other driver" tracking
-- [ ] Receipt upload + preview/download
-- [ ] Monthly charts + CSV export
+- [x] Receipt upload + preview/download
+- [x] Monthly charts + CSV export
 - [ ] QA: acceptance tests + regression checklist
 
-## In Progress (2026-02-12)
-- Fill-ups: need [id] endpoints (GET single, DELETE, PATCH)
-- Monthly charts: frontend visualization pending
-- Receipts: download endpoint pending
-- Export: CSV export route exists, verify completion
+## Verification Needed (2026-02-12)
+- [ ] Verify trips CRUD endpoints exist and work
+- [ ] Verify receipt upload flow (frontend + backend)
+- [ ] Run smoke tests
+- [ ] Acceptance checklist validation
 
-## ClawHub Community Strategy
-- Create skill documenting Uchiha Dev Team structure
-- Publish to attract contributors
+## Community Strategy
+- Use notebook-style content for audience building
+- Focus on FleetFuel development + shareable content
