@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
+import { ChevronsUpDown } from "lucide-react";
 
 import { receiptsEnabled } from "@/lib/flags";
 
@@ -56,6 +57,9 @@ export default function FillUpsPage() {
   const [totalCost, setTotalCost] = useState("");
   const [currency, setCurrency] = useState("EUR");
   const [isFullTank, setIsFullTank] = useState(true);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [stationName, setStationName] = useState("");
+  const [notes, setNotes] = useState("");
 
   async function patchFillUp(id: string, patch: Partial<FillUp>) {
     const res = await fetch(`/api/fillups/${id}`, {
@@ -217,6 +221,8 @@ export default function FillUpsPage() {
                     totalCost: Math.round(Number(totalCost) * 100),
                     currency,
                     isFullTank,
+                    stationName: stationName.trim() || undefined,
+                    notes: notes.trim() || undefined,
                   }),
                 });
                 const data = (await res.json()) as { error?: string };
@@ -224,6 +230,8 @@ export default function FillUpsPage() {
                 setOdometer("");
                 setFuelAmount("");
                 setTotalCost("");
+                setStationName("");
+                setNotes("");
                 toast.success("Fill-up added");
                 await refreshFillUps(vehicleId);
               } catch (e2) {
@@ -282,6 +290,45 @@ export default function FillUpsPage() {
               <Checkbox id="fullTank" checked={isFullTank} onCheckedChange={(v) => setIsFullTank(Boolean(v))} />
               <Label htmlFor="fullTank">Full tank</Label>
             </div>
+
+            <div className="md:col-span-6">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="flex items-center gap-2 px-0"
+              >
+                <ChevronsUpDown className="h-4 w-4" />
+                {showAdvanced ? "Hide" : "Show"} advanced options
+                <span className="text-muted-foreground text-xs">
+                  (station name, notes)
+                </span>
+              </Button>
+            </div>
+
+            {showAdvanced ? (
+              <>
+                <div className="grid gap-2 md:col-span-3">
+                  <Label htmlFor="stationName">Station name</Label>
+                  <Input
+                    id="stationName"
+                    value={stationName}
+                    onChange={(e) => setStationName(e.target.value)}
+                    placeholder="Optional"
+                  />
+                </div>
+                <div className="grid gap-2 md:col-span-3">
+                  <Label htmlFor="notes">Notes</Label>
+                  <Input
+                    id="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Optional"
+                  />
+                </div>
+              </>
+            ) : null}
 
             <div className="md:col-span-6 flex justify-end">
               <Button type="submit" disabled={!canSubmit}>
